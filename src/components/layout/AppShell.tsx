@@ -12,6 +12,7 @@ import {
   Settings,
   ShoppingBasket,
   Sparkles,
+  UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hapticImpact } from "@/lib/telegram";
@@ -52,7 +53,14 @@ const NAV_ITEMS = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { currency, setCurrency, storageMode, isTelegram } = useApp();
+  const {
+    currency,
+    setCurrency,
+    storageMode,
+    isTelegram,
+    userId,
+    userDisplayName,
+  } = useApp();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
@@ -275,6 +283,39 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 );
               })}
             </div>
+          </div>
+
+          <div className="rounded-[18px] border border-[var(--app-border)] bg-[var(--app-subtle)]/80 p-4 space-y-2.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-[var(--app-text)]">
+              <UserCheck
+                className="h-4 w-4 text-[var(--app-accent)]"
+                strokeWidth={2}
+              />
+              <span>Профіль та ізоляція даних</span>
+              <span
+                className={cn(
+                  "ml-auto inline-flex items-center rounded-full px-2 py-0.5 text-[10.5px] font-bold",
+                  isTelegram
+                    ? "bg-[var(--app-success-soft)] text-[var(--app-success)]"
+                    : "bg-[var(--app-accent-soft)] text-[var(--app-accent)]"
+                )}
+              >
+                {isTelegram ? "Telegram" : "Браузер"}
+              </span>
+            </div>
+            <div className="text-xs font-semibold text-[var(--app-text)]">
+              {userDisplayName}
+            </div>
+            <p className="text-[11.5px] text-[var(--app-hint)] leading-relaxed">
+              {isTelegram
+                ? "Усі ваші рецепти, інгредієнти та плани закупівель прив'язані до вашого Telegram-акаунту й невидимі для інших користувачів."
+                : "Ви працюєте в ізольованому гостьовому профілі цього браузера. У Telegram Mini App дані автоматично прив'яжуться до вашого акаунту."}
+            </p>
+            {userId && (
+              <div className="text-[10.5px] font-mono text-[var(--app-hint)]/80 truncate">
+                ID: {userId}
+              </div>
+            )}
           </div>
 
           <div className="rounded-[18px] border border-[var(--app-border)] bg-[var(--app-subtle)]/80 p-4 space-y-2">

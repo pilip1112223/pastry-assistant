@@ -1,9 +1,19 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Flame, Package, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import {
+  Flame,
+  Package,
+  Pencil,
+  Plus,
+  Scale,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 import type { Ingredient } from "@/types/pastry";
-import { formatMoney } from "@/lib/calculations";
+import { formatMoney, getPriceUnitLabel } from "@/lib/calculations";
+import { apiFetch } from "@/lib/api-client";
 import { hapticImpact, hapticNotification } from "@/lib/telegram";
 import { useApp } from "@/components/providers/AppProvider";
 import { Button } from "@/components/ui/button";
@@ -22,7 +32,7 @@ export default function IngredientsPage() {
 
   const loadIngredients = useCallback(async () => {
     try {
-      const res = await fetch("/api/ingredients", { cache: "no-store" });
+      const res = await apiFetch("/api/ingredients", { cache: "no-store" });
       if (!res.ok) throw new Error();
       const data = (await res.json()) as Ingredient[];
       setIngredients(data);
@@ -67,7 +77,7 @@ export default function IngredientsPage() {
 
     setDeletingId(item.id);
     try {
-      const res = await fetch(`/api/ingredients/${item.id}`, {
+      const res = await apiFetch(`/api/ingredients/${item.id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error();
@@ -103,7 +113,7 @@ export default function IngredientsPage() {
           <p className="mt-0.5 text-xs font-medium text-[var(--app-hint)]">
             {ingredients.length > 0
               ? `Продуктів у базі: ${ingredients.length}`
-              : "База продуктів для розрахунку собівартості"}
+              : "База продуктів у грамах, мілілітрах та штуках"}
           </p>
         </div>
         <Button onClick={openCreate} size="sm" className="shrink-0 px-4">
@@ -166,8 +176,8 @@ export default function IngredientsPage() {
             Склад поки порожній
           </h2>
           <p className="mx-auto mt-2 max-w-sm text-[13px] text-[var(--app-hint)] leading-relaxed">
-            Додайте інгредієнти, з якими працюєте. Ціну можна вказати за
-            упаковку або одразу за 1 кг — система перерахує автоматично.
+            Додайте інгредієнти або пакування у грамах, мілілітрах чи штуках.
+            Ціну можна вказати за упаковку або одразу за 1 кг / л / шт.
           </p>
           <Button onClick={openCreate} className="mt-6 px-6">
             <Plus className="h-4 w-4" strokeWidth={2.3} />
@@ -203,6 +213,7 @@ export default function IngredientsPage() {
               item.protein100g > 0 ||
               item.fat100g > 0 ||
               item.carbs100g > 0;
+            const priceUnit = getPriceUnitLabel(item.unitType);
 
             return (
               <Card
@@ -215,8 +226,16 @@ export default function IngredientsPage() {
                   </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     <span className="inline-flex items-center rounded-full bg-[var(--app-accent-soft)] px-2.5 py-0.5 text-[12px] font-extrabold tabular-nums text-[var(--app-accent)]">
-                      {formatMoney(item.pricePerKg, currency)} / кг
+                      {formatMoney(item.pricePerKg, currency)} / {priceUnit}
                     </span>
+                    {item.unitType === "piece" && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--app-warning-soft)] px-2.5 py-0.5 text-[11px] font-bold tabular-nums text-[var(--app-warning)]">
+                        <Scale className="h-3 w-3" strokeWidth={2} />
+                        {item.unitWeightGrams > 0
+                          ? `1 шт ≈ ${item.unitWeightGrams} г`
+                          : "Поштучно"}
+                      </span>
+                    )}
                     {hasKbju && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-[var(--app-kbju-soft)] px-2.5 py-0.5 text-[11px] font-semibold tabular-nums text-[var(--app-kbju)]">
                         <Flame className="h-3 w-3" strokeWidth={2.1} />

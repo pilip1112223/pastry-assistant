@@ -19,6 +19,7 @@ import {
   formatMoney,
   formatWeight,
 } from "@/lib/calculations";
+import { apiFetch } from "@/lib/api-client";
 import { hapticImpact } from "@/lib/telegram";
 import { useApp } from "@/components/providers/AppProvider";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,7 @@ export default function RecipesListPage() {
 
   const loadRecipes = useCallback(async () => {
     try {
-      const res = await fetch("/api/recipes", { cache: "no-store" });
+      const res = await apiFetch("/api/recipes", { cache: "no-store" });
       if (!res.ok) throw new Error();
       const data = (await res.json()) as RecipeWithDetails[];
       setRecipes(data);
@@ -190,7 +191,7 @@ export default function RecipesListPage() {
           {filtered.map((recipe) => {
             const calc = calculateRecipe(recipe, recipe.baseDiameter);
             const kbjuItems = calc.aggregated.map((a) => ({
-              grams: a.totalGrams,
+              grams: a.totalWeightGrams,
               calories100g: a.ingredient.calories100g,
               protein100g: a.ingredient.protein100g,
               fat100g: a.ingredient.fat100g,

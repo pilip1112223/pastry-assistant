@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { resolveRequestUserId } from "@/lib/auth";
 import { deleteRecipe, getRecipeById, updateRecipe } from "@/lib/store";
 
 const recipeSchema = z.object({
@@ -28,16 +29,20 @@ const recipeSchema = z.object({
 });
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = resolveRequestUserId(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
     const { id } = await context.params;
     const numericId = Number(id);
     if (!Number.isInteger(numericId) || numericId <= 0) {
       return NextResponse.json({ error: "Невірний ID" }, { status: 400 });
     }
-    const recipe = await getRecipeById(numericId);
+    const recipe = await getRecipeById(auth.userId, numericId);
     if (!recipe) {
       return NextResponse.json({ error: "Рецепт не знайдено" }, { status: 404 });
     }
@@ -56,6 +61,10 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = resolveRequestUserId(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
     const { id } = await context.params;
     const numericId = Number(id);
     if (!Number.isInteger(numericId) || numericId <= 0) {
@@ -69,7 +78,7 @@ export async function PUT(
         { status: 400 }
       );
     }
-    const updated = await updateRecipe(numericId, parsed.data);
+    const updated = await updateRecipe(auth.userId, numericId, parsed.data);
     if (!updated) {
       return NextResponse.json({ error: "Рецепт не знайдено" }, { status: 404 });
     }
@@ -84,16 +93,20 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = resolveRequestUserId(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
     const { id } = await context.params;
     const numericId = Number(id);
     if (!Number.isInteger(numericId) || numericId <= 0) {
       return NextResponse.json({ error: "Невірний ID" }, { status: 400 });
     }
-    const deleted = await deleteRecipe(numericId);
+    const deleted = await deleteRecipe(auth.userId, numericId);
     if (!deleted) {
       return NextResponse.json({ error: "Рецепт не знайдено" }, { status: 404 });
     }

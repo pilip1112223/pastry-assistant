@@ -21,8 +21,10 @@ import { DIAMETERS } from "@/types/pastry";
 import {
   calculateProcurementList,
   formatMoney,
-  formatWeightDetailed,
+  formatProcurementQuantity,
+  formatProcurementQuantityText,
 } from "@/lib/calculations";
+import { apiFetch } from "@/lib/api-client";
 import {
   hapticImpact,
   hapticNotification,
@@ -36,7 +38,7 @@ import { Input } from "@/components/ui/input";
 const CHECKED_STORAGE_KEY = "pastry_procurement_checked_v1";
 
 export default function ProcurementPage() {
-  const { currency, showToast } = useApp();
+  const { currency, userId, showToast } = useApp();
 
   const [recipes, setRecipes] = useState<RecipeWithDetails[]>([]);
   const [plans, setPlans] = useState<ProcurementPlan[]>([]);
@@ -56,8 +58,8 @@ export default function ProcurementPage() {
   const loadData = useCallback(async () => {
     try {
       const [recRes, planRes] = await Promise.all([
-        fetch("/api/recipes", { cache: "no-store" }),
-        fetch("/api/procurement", { cache: "no-store" }),
+        apiFetch("/api/recipes", { cache: "no-store" }),
+        apiFetch("/api/procurement", { cache: "no-store" }),
       ]);
       const recData: RecipeWithDetails[] = recRes.ok ? await recRes.json() : [];
       const planData: ProcurementPlan[] = planRes.ok
@@ -89,11 +91,11 @@ export default function ProcurementPage() {
     loadData();
   }, [loadData]);
 
-  // Restore checked state per plan from localStorage
+  // Restore checked state per user & plan from localStorage
   useEffect(() => {
     try {
       const raw = localStorage.getItem(
-        `${CHECKED_STORAGE_KEY}_${activePlanId ?? "draft"}`
+        `${CHECKED_STORAGE_KEY}_${userId || "anon"}_${activePlanId ?? "draft"}`
       );
       if (raw) {
         const parsed = JSON.parse(raw);
@@ -105,21 +107,21 @@ export default function ProcurementPage() {
     } catch {
       setCheckedIds([]);
     }
-  }, [activePlanId]);
+  }, [activePlanId, userId]);
 
   const persistChecked = useCallback(
     (next: number[]) => {
       setCheckedIds(next);
       try {
         localStorage.setItem(
-          `${CHECKED_STORAGE_KEY}_${activePlanId ?? "draft"}`,
+          `${CHECKED_STORAGE_KEY}_${userId || "anon"}_${activePlanId ?? "draft"}`,
           JSON.stringify(next)
         );
       } catch {
         // ignore
       }
     },
-    [activePlanId]
+    [activePlanId, userId]
   );
 
   const recipeMap = useMemo(
@@ -191,7 +193,7 @@ export default function ProcurementPage() {
         : "/api/procurement";
       const method = activePlanId ? "PATCH" : "POST";
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -229,7 +231,7 @@ export default function ProcurementPage() {
     hapticImpact("medium");
     if (!window.confirm(`Видалити план «${planName}»?`)) return;
     try {
-      const res = await fetch(`/api/procurement/${activePlanId}`, {
+      const res = await apiFetch(`/api/procurement/${activePlanId}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error();
@@ -269,10 +271,10 @@ export default function ProcurementPage() {
     const productLines = listToExport
       .map(
         (i) =>
-          `☐ ${i.name} — ${formatWeightDetailed(i.totalGrams)} (~${formatMoney(
-            i.estimatedCost,
-            currency
-          )})`
+          `☐ ${i.name} — ${formatProcurementQuantityText(
+            i.totalGrams,
+            i.unitType
+          )} (~${formatMoney(i.estimatedCost, currency)})`
       )
       .join("\n");
 
@@ -611,6 +613,10 @@ export default function ProcurementPage() {
               <div className="divide-y divide-[var(--app-border)]">
                 {summary.shoppingList.map((item) => {
                   const checked = checkedIds.includes(item.ingredientId);
+                  const qtyDisplay = formatProcurementQuantity(
+                    item.totalGrams,
+                    item.unitType
+                  );
                   return (
                     <button
                       key={item.ingredientId}
@@ -649,8 +655,13 @@ export default function ProcurementPage() {
 
                       <div className="shrink-0 text-right">
                         <span className="inline-block rounded-full bg-[var(--app-subtle)] px-3 py-1 text-[13px] font-extrabold tabular-nums text-[var(--app-text)]">
-                          {formatWeightDetailed(item.totalGrams)}
+                          {qtyDisplay.primary}
                         </span>
+                        {qtyDisplay.exactNote && (
+                          <div className="mt-0.5 text-[10.5px] font-semibold tabular-nums text-[var(--app-hint)]">
+                            {qtyDisplay.exactNote}
+                          </div>
+                        )}
                       </div>
                     </button>
                   );

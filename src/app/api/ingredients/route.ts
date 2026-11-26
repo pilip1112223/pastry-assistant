@@ -1,19 +1,26 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { resolveRequestUserId } from "@/lib/auth";
 import { createIngredient, listIngredients } from "@/lib/store";
 
 const createIngredientSchema = z.object({
   name: z.string().trim().min(1, "Вкажіть назву продукту").max(200),
+  unitType: z.enum(["weight", "volume", "piece"]).optional().default("weight"),
   pricePerKg: z.coerce.number().min(0, "Ціна не може бути від'ємною"),
+  unitWeightGrams: z.coerce.number().min(0).optional().default(0),
   calories100g: z.coerce.number().min(0).optional().default(0),
   protein100g: z.coerce.number().min(0).optional().default(0),
   fat100g: z.coerce.number().min(0).optional().default(0),
   carbs100g: z.coerce.number().min(0).optional().default(0),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const items = await listIngredients();
+    const auth = resolveRequestUserId(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const items = await listIngredients(auth.userId);
     return NextResponse.json(items);
   } catch (error) {
     console.error("GET /api/ingredients error:", error);
@@ -26,6 +33,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const auth = resolveRequestUserId(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
     const body = await request.json();
     const parsed = createIngredientSchema.safeParse(body);
     if (!parsed.success) {
@@ -34,7 +45,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    const created = await createIngredient(parsed.data);
+    const created = await createIngredient(auth.userId, parsed.data);
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     console.error("POST /api/ingredients error:", error);

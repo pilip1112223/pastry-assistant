@@ -1,7 +1,22 @@
+export type IngredientUnitType = "weight" | "volume" | "piece";
+
 export interface Ingredient {
   id: number;
+  userId?: string;
   name: string;
+  unitType: IngredientUnitType;
+  /**
+   * Price per base billing unit:
+   * - "weight": price per 1 kg (1000 g)
+   * - "volume": price per 1 l (1000 ml)
+   * - "piece": price per 1 piece (1 шт)
+   */
   pricePerKg: number;
+  /**
+   * Optional weight of 1 piece in grams (used when unitType === "piece"
+   * for accurate total cake weight and KBJU calculation).
+   */
+  unitWeightGrams: number;
   calories100g: number;
   protein100g: number;
   fat100g: number;
@@ -12,6 +27,12 @@ export interface Ingredient {
 export interface ComponentIngredientInput {
   id?: number;
   ingredientId: number;
+  /**
+   * Quantity in base recipe unit:
+   * - "weight": grams (г)
+   * - "volume": milliliters (мл)
+   * - "piece": pieces (шт)
+   */
   baseGrams: number;
 }
 
@@ -40,6 +61,7 @@ export interface RecipeComponentWithDetails {
 
 export interface RecipeWithDetails {
   id: number;
+  userId?: string;
   name: string;
   baseDiameter: number;
   baseHeight: number;
@@ -68,6 +90,7 @@ export interface ProcurementPlanItem {
 
 export interface ProcurementPlan {
   id: number;
+  userId?: string;
   name: string;
   itemsJson: ProcurementPlanItem[];
   updatedAt: string;

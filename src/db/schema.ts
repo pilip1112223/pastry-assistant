@@ -6,36 +6,52 @@ import {
   doublePrecision,
   timestamp,
   jsonb,
+  index,
 } from "drizzle-orm/pg-core";
-import type { ProcurementPlanItem } from "@/types/pastry";
+import type { IngredientUnitType, ProcurementPlanItem } from "@/types/pastry";
 
-export const ingredients = pgTable("ingredients", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  pricePerKg: doublePrecision("price_per_kg").notNull().default(0),
-  calories100g: doublePrecision("calories_100g").notNull().default(0),
-  protein100g: doublePrecision("protein_100g").notNull().default(0),
-  fat100g: doublePrecision("fat_100g").notNull().default(0),
-  carbs100g: doublePrecision("carbs_100g").notNull().default(0),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const ingredients = pgTable(
+  "ingredients",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id").notNull().default("legacy"),
+    name: text("name").notNull(),
+    unitType: text("unit_type")
+      .$type<IngredientUnitType>()
+      .notNull()
+      .default("weight"),
+    pricePerKg: doublePrecision("price_per_kg").notNull().default(0),
+    unitWeightGrams: doublePrecision("unit_weight_grams").notNull().default(0),
+    calories100g: doublePrecision("calories_100g").notNull().default(0),
+    protein100g: doublePrecision("protein_100g").notNull().default(0),
+    fat100g: doublePrecision("fat_100g").notNull().default(0),
+    carbs100g: doublePrecision("carbs_100g").notNull().default(0),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("ingredients_user_id_idx").on(table.userId)]
+);
 
-export const recipes = pgTable("recipes", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  baseDiameter: integer("base_diameter").notNull().default(16),
-  baseHeight: integer("base_height").notNull().default(10),
-  defaultMarkupPercent: doublePrecision("default_markup_percent")
-    .notNull()
-    .default(100),
-  portionsCount: integer("portions_count").notNull().default(8),
-  finishedWeightGrams: integer("finished_weight_grams").notNull().default(0),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const recipes = pgTable(
+  "recipes",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id").notNull().default("legacy"),
+    name: text("name").notNull(),
+    baseDiameter: integer("base_diameter").notNull().default(16),
+    baseHeight: integer("base_height").notNull().default(10),
+    defaultMarkupPercent: doublePrecision("default_markup_percent")
+      .notNull()
+      .default(100),
+    portionsCount: integer("portions_count").notNull().default(8),
+    finishedWeightGrams: integer("finished_weight_grams").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("recipes_user_id_idx").on(table.userId)]
+);
 
 export const recipeComponents = pgTable("recipe_components", {
   id: serial("id").primaryKey(),
@@ -57,14 +73,19 @@ export const componentIngredients = pgTable("component_ingredients", {
   baseGrams: doublePrecision("base_grams").notNull().default(0),
 });
 
-export const procurementPlans = pgTable("procurement_plans", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  itemsJson: jsonb("items_json")
-    .$type<ProcurementPlanItem[]>()
-    .notNull()
-    .default([]),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const procurementPlans = pgTable(
+  "procurement_plans",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id").notNull().default("legacy"),
+    name: text("name").notNull(),
+    itemsJson: jsonb("items_json")
+      .$type<ProcurementPlanItem[]>()
+      .notNull()
+      .default([]),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("procurement_plans_user_id_idx").on(table.userId)]
+);

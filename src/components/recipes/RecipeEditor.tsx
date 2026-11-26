@@ -20,13 +20,18 @@ import {
 import type { Ingredient, RecipeWithDetails } from "@/types/pastry";
 import { DIAMETERS } from "@/types/pastry";
 import {
+  calculateIngredientCost,
   calculateKbju,
   calculateRecipe,
   formatMoney,
+  formatQuantity,
   formatWeight,
   getDiameterCoefficient,
-  roundGrams,
+  getPriceUnitLabel,
+  getRecipeUnitLabel,
+  roundQuantity,
 } from "@/lib/calculations";
+import { apiFetch } from "@/lib/api-client";
 import {
   hapticImpact,
   hapticNotification,
@@ -112,9 +117,9 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
     async function load() {
       try {
         const [ingRes, recRes] = await Promise.all([
-          fetch("/api/ingredients", { cache: "no-store" }),
+          apiFetch("/api/ingredients", { cache: "no-store" }),
           recipeId
-            ? fetch(`/api/recipes/${recipeId}`, { cache: "no-store" })
+            ? apiFetch(`/api/recipes/${recipeId}`, { cache: "no-store" })
             : Promise.resolve(null),
         ]);
 
@@ -221,7 +226,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
 
   const liveKbju = useMemo(() => {
     const items = calc.aggregated.map((a) => ({
-      grams: a.totalGrams,
+      grams: a.totalWeightGrams,
       calories100g: a.ingredient.calories100g,
       protein100g: a.ingredient.protein100g,
       fat100g: a.ingredient.fat100g,
@@ -348,7 +353,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
       const url = recipeId ? `/api/recipes/${recipeId}` : "/api/recipes";
       const method = recipeId ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -382,7 +387,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
 
     setDeleting(true);
     try {
-      const res = await fetch(`/api/recipes/${recipeId}`, { method: "DELETE" });
+      const res = await apiFetch(`/api/recipes/${recipeId}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
       hapticNotification("success");
       showToast("Техкарту видалено", "success");
@@ -772,10 +777,13 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                   comp.ingredients.map((line) => {
                     const ing = ingredientMap.get(line.ingredientId);
                     if (!ing) return null;
-                    const baseG =
+                    const unitType = ing.unitType ?? "weight";
+                    const recipeUnit = getRecipeUnitLabel(unitType);
+                    const priceUnit = getPriceUnitLabel(unitType);
+                    const baseQty =
                       parseFloat(line.baseGrams.replace(",", ".")) || 0;
-                    const scaledG = baseG * coeff;
-                    const lineCost = (scaledG / 1000) * ing.pricePerKg;
+                    const scaledQty = baseQty * coeff;
+                    const lineCost = calculateIngredientCost(scaledQty, ing);
 
                     return (
                       <div
@@ -788,11 +796,15 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                           </div>
                           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11.5px] tabular-nums text-[var(--app-hint)]">
                             <span>
-                              {formatMoney(ing.pricePerKg, currency)}/кг
+                              {formatMoney(ing.pricePerKg, currency)}/{priceUnit}
                             </span>
+                            {unitType === "piece" && ing.unitWeightGrams > 0 && (
+                              <span>· 1 шт ≈ {ing.unitWeightGrams} г</span>
+                            )}
                             {selectedDiameter !== baseDiameter && (
                               <span className="font-bold text-[var(--app-accent)]">
-                                → {roundGrams(scaledG)} г на Ø{selectedDiameter}
+                                → {roundQuantity(scaledQty, unitType)} {recipeUnit} на Ø
+                                {selectedDiameter}
                               </span>
                             )}
                           </div>
@@ -813,8 +825,8 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                               )
                             }
                             placeholder="0"
-                            suffix="г"
-                            wrapperClassName="w-24"
+                            suffix={recipeUnit}
+                            wrapperClassName="w-25"
                             className="text-right font-bold tabular-nums"
                           />
 
@@ -912,7 +924,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                 <span className="truncate font-semibold">{item.name}</span>
                 <div className="flex items-center gap-3 shrink-0 tabular-nums">
                   <span className="font-bold text-[var(--app-text)]">
-                    {formatWeight(item.totalGrams)}
+                    {formatQuantity(item.totalGrams, item.unitType)}
                   </span>
                   <span className="w-22 text-right text-xs font-extrabold text-[var(--app-accent)]">
                     {formatMoney(item.totalCost, currency)}
@@ -989,7 +1001,8 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                     {ing.name}
                   </span>
                   <span className="shrink-0 rounded-full bg-[var(--app-accent-soft)] px-2.5 py-0.5 text-xs font-extrabold tabular-nums text-[var(--app-accent)]">
-                    {formatMoney(ing.pricePerKg, currency)}/кг
+                    {formatMoney(ing.pricePerKg, currency)}/
+                    {getPriceUnitLabel(ing.unitType)}
                   </span>
                 </button>
               ))}

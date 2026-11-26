@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { resolveRequestUserId } from "@/lib/auth";
 import { deleteProcurementPlan, updateProcurementPlan } from "@/lib/store";
 
 const planItemSchema = z.object({
@@ -18,6 +19,10 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = resolveRequestUserId(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
     const { id } = await context.params;
     const numericId = Number(id);
     if (!Number.isInteger(numericId) || numericId <= 0) {
@@ -31,9 +36,16 @@ export async function PATCH(
         { status: 400 }
       );
     }
-    const updated = await updateProcurementPlan(numericId, parsed.data);
+    const updated = await updateProcurementPlan(
+      auth.userId,
+      numericId,
+      parsed.data
+    );
     if (!updated) {
-      return NextResponse.json({ error: "План закупівлі не знайдено" }, { status: 404 });
+      return NextResponse.json(
+        { error: "План закупівлі не знайдено" },
+        { status: 404 }
+      );
     }
     return NextResponse.json(updated);
   } catch (error) {
@@ -46,18 +58,25 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = resolveRequestUserId(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
     const { id } = await context.params;
     const numericId = Number(id);
     if (!Number.isInteger(numericId) || numericId <= 0) {
       return NextResponse.json({ error: "Невірний ID" }, { status: 400 });
     }
-    const deleted = await deleteProcurementPlan(numericId);
+    const deleted = await deleteProcurementPlan(auth.userId, numericId);
     if (!deleted) {
-      return NextResponse.json({ error: "План закупівлі не знайдено" }, { status: 404 });
+      return NextResponse.json(
+        { error: "План закупівлі не знайдено" },
+        { status: 404 }
+      );
     }
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -10,7 +10,12 @@ import React, {
 import { AlertCircle, CheckCircle2, Info } from "lucide-react";
 import type { CurrencyCode } from "@/types/pastry";
 import { CURRENCIES } from "@/types/pastry";
-import { hapticImpact, initTelegramWebApp } from "@/lib/telegram";
+import {
+  getClientIdentity,
+  hapticImpact,
+  initTelegramWebApp,
+} from "@/lib/telegram";
+import { apiFetch } from "@/lib/api-client";
 
 interface ToastMessage {
   id: number;
@@ -23,6 +28,8 @@ interface AppContextValue {
   setCurrency: (code: CurrencyCode) => void;
   storageMode: "neon" | "local" | null;
   isTelegram: boolean;
+  userId: string;
+  userDisplayName: string;
   showToast: (text: string, type?: "default" | "success" | "error") => void;
 }
 
@@ -34,6 +41,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrencyState] = useState<CurrencyCode>("UAH");
   const [storageMode, setStorageMode] = useState<"neon" | "local" | null>(null);
   const [isTelegram, setIsTelegram] = useState(false);
+  const [userId, setUserId] = useState("");
+  const [userDisplayName, setUserDisplayName] = useState("Гість (браузер)");
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   useEffect(() => {
@@ -48,9 +57,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // ignore storage errors
     }
 
-    initTelegramWebApp().then((inTg) => setIsTelegram(inTg));
+    const syncIdentity = () => {
+      const identity = getClientIdentity();
+      setUserId(identity.userId);
+      setUserDisplayName(identity.displayName);
+      if (identity.isTelegramUser) {
+        setIsTelegram(true);
+      }
+    };
 
-    fetch("/api/status")
+    syncIdentity();
+    initTelegramWebApp().then((inTg) => {
+      if (inTg) setIsTelegram(true);
+      syncIdentity();
+    });
+
+    apiFetch("/api/status")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.storageMode === "neon" || data?.storageMode === "local") {
@@ -88,6 +110,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setCurrency,
         storageMode,
         isTelegram,
+        userId,
+        userDisplayName,
         showToast,
       }}
     >
@@ -113,7 +137,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                   : "border-[#3c2d24] bg-[#2a1e17] text-[#faf7f2]"
               }`}
             >
-              <Icon className="h-4.5 w-4.5 shrink-0 opacity-95" strokeWidth={2.2} />
+              <Icon
+                className="h-4.5 w-4.5 shrink-0 opacity-95"
+                strokeWidth={2.2}
+              />
               <span className="leading-snug">{toast.text}</span>
             </div>
           );

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { resolveRequestUserId } from "@/lib/auth";
 import { createProcurementPlan, listProcurementPlans } from "@/lib/store";
 
 const planItemSchema = z.object({
@@ -13,9 +14,13 @@ const createPlanSchema = z.object({
   itemsJson: z.array(planItemSchema).default([]),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const plans = await listProcurementPlans();
+    const auth = resolveRequestUserId(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const plans = await listProcurementPlans(auth.userId);
     return NextResponse.json(plans);
   } catch (error) {
     console.error("GET /api/procurement error:", error);
@@ -28,6 +33,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const auth = resolveRequestUserId(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
     const body = await request.json();
     const parsed = createPlanSchema.safeParse(body);
     if (!parsed.success) {
@@ -36,7 +45,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    const created = await createProcurementPlan(parsed.data);
+    const created = await createProcurementPlan(auth.userId, parsed.data);
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     console.error("POST /api/procurement error:", error);

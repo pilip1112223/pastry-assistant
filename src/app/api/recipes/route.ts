@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { resolveRequestUserId } from "@/lib/auth";
 import { createRecipe, listRecipes } from "@/lib/store";
 
 const recipeSchema = z.object({
@@ -27,9 +28,13 @@ const recipeSchema = z.object({
     .default([]),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const items = await listRecipes();
+    const auth = resolveRequestUserId(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const items = await listRecipes(auth.userId);
     return NextResponse.json(items);
   } catch (error) {
     console.error("GET /api/recipes error:", error);
@@ -42,6 +47,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const auth = resolveRequestUserId(request);
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
     const body = await request.json();
     const parsed = recipeSchema.safeParse(body);
     if (!parsed.success) {
@@ -50,7 +59,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    const created = await createRecipe(parsed.data);
+    const created = await createRecipe(auth.userId, parsed.data);
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     console.error("POST /api/recipes error:", error);

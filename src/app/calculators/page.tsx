@@ -4,6 +4,7 @@ import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Calculator, Flame, Ruler } from "lucide-react";
 import type { Ingredient, RecipeWithDetails } from "@/types/pastry";
+import { apiFetch } from "@/lib/api-client";
 import { hapticImpact } from "@/lib/telegram";
 import { QuickCostCalculator } from "@/components/calculators/QuickCostCalculator";
 import { PanRecalculator } from "@/components/calculators/PanRecalculator";
@@ -31,10 +32,10 @@ function CalculatorsContent() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/recipes", { cache: "no-store" }).then((r) =>
+      apiFetch("/api/recipes", { cache: "no-store" }).then((r) =>
         r.ok ? r.json() : []
       ),
-      fetch("/api/ingredients", { cache: "no-store" }).then((r) =>
+      apiFetch("/api/ingredients", { cache: "no-store" }).then((r) =>
         r.ok ? r.json() : []
       ),
     ])

@@ -1,10 +1,28 @@
 import type {
   CurrencyCode,
   Ingredient,
+  IngredientUnitType,
   ProcurementPlanItem,
   RecipeWithDetails,
 } from "@/types/pastry";
 import { CURRENCIES } from "@/types/pastry";
+
+export function normalizeUnitType(value?: string | null): IngredientUnitType {
+  if (value === "volume" || value === "piece") return value;
+  return "weight";
+}
+
+export function getRecipeUnitLabel(unitType?: IngredientUnitType): string {
+  if (unitType === "piece") return "шт";
+  if (unitType === "volume") return "мл";
+  return "г";
+}
+
+export function getPriceUnitLabel(unitType?: IngredientUnitType): string {
+  if (unitType === "piece") return "шт";
+  if (unitType === "volume") return "л";
+  return "кг";
+}
 
 /**
  * Diameter scaling coefficient: (targetDiameter / baseDiameter)^2
@@ -24,8 +42,48 @@ export function roundGrams(grams: number): number {
   return Math.round(grams);
 }
 
+export function roundQuantity(
+  quantity: number,
+  unitType: IngredientUnitType = "weight"
+): number {
+  const safe = Number.isFinite(quantity) ? Math.max(0, quantity) : 0;
+  if (unitType === "piece") {
+    return Math.round(safe * 10) / 10;
+  }
+  return roundGrams(safe);
+}
+
 export function roundMoney(amount: number): number {
   return Math.round(amount * 100) / 100;
+}
+
+export function calculateIngredientCost(
+  quantity: number,
+  ingredient: Pick<Ingredient, "pricePerKg" | "unitType">
+): number {
+  const safeQty = Number.isFinite(quantity) ? Math.max(0, quantity) : 0;
+  const price = Number.isFinite(ingredient.pricePerKg)
+    ? Math.max(0, ingredient.pricePerKg)
+    : 0;
+  if (normalizeUnitType(ingredient.unitType) === "piece") {
+    return safeQty * price;
+  }
+  return (safeQty / 1000) * price;
+}
+
+export function calculateIngredientWeightGrams(
+  quantity: number,
+  ingredient: Pick<Ingredient, "unitType" | "unitWeightGrams">
+): number {
+  const safeQty = Number.isFinite(quantity) ? Math.max(0, quantity) : 0;
+  if (normalizeUnitType(ingredient.unitType) === "piece") {
+    const unitWeight = Number.isFinite(ingredient.unitWeightGrams)
+      ? Math.max(0, ingredient.unitWeightGrams)
+      : 0;
+    return safeQty * unitWeight;
+  }
+  // For weight (г) and volume (мл ≈ 1 г/мл)
+  return safeQty;
 }
 
 export function formatMoney(
@@ -61,13 +119,65 @@ export function formatWeightDetailed(grams: number): string {
   return `${roundGrams(safe)} г`;
 }
 
+export function formatQuantity(
+  quantity: number,
+  unitType: IngredientUnitType = "weight"
+): string {
+  const safe = Number.isFinite(quantity) ? Math.max(0, quantity) : 0;
+  if (unitType === "piece") {
+    return `${roundQuantity(safe, "piece")} шт`;
+  }
+  if (unitType === "volume") {
+    if (safe >= 1000) {
+      const liters = Math.round((safe / 1000) * 100) / 100;
+      return `${liters} л`;
+    }
+    return `${roundGrams(safe)} мл`;
+  }
+  return formatWeight(safe);
+}
+
+export function formatProcurementQuantity(
+  quantity: number,
+  unitType: IngredientUnitType = "weight"
+): { primary: string; exactNote?: string } {
+  const safe = Number.isFinite(quantity) ? Math.max(0, quantity) : 0;
+  if (unitType === "piece") {
+    const exact = Math.round(safe * 10) / 10;
+    const buy = exact > 0 ? Math.ceil(exact - 1e-9) : 0;
+    const isFractional = Math.abs(buy - exact) > 1e-6;
+    return {
+      primary: `${buy} шт`,
+      exactNote: isFractional ? `точно ${exact} шт` : undefined,
+    };
+  }
+  if (unitType === "volume") {
+    if (safe >= 1000) {
+      const liters = Math.round((safe / 1000) * 100) / 100;
+      return { primary: `${liters} л (${Math.round(safe)} мл)` };
+    }
+    return { primary: `${roundGrams(safe)} мл` };
+  }
+  return { primary: formatWeightDetailed(safe) };
+}
+
+export function formatProcurementQuantityText(
+  quantity: number,
+  unitType: IngredientUnitType = "weight"
+): string {
+  const { primary, exactNote } = formatProcurementQuantity(quantity, unitType);
+  return exactNote ? `${primary} (${exactNote})` : primary;
+}
+
 export interface CalculatedIngredientLine {
   id: number;
   ingredientId: number;
   name: string;
+  unitType: IngredientUnitType;
   pricePerKg: number;
   baseGrams: number;
   scaledGrams: number;
+  scaledWeightGrams: number;
   cost: number;
 }
 
@@ -83,8 +193,13 @@ export interface CalculatedComponent {
 export interface AggregatedIngredient {
   ingredientId: number;
   name: string;
+  unitType: IngredientUnitType;
+  unitWeightGrams: number;
   pricePerKg: number;
+  /** Total quantity in the ingredient's own unit (г, мл, or шт) */
   totalGrams: number;
+  /** Effective weight in grams for total cake weight & KBJU */
+  totalWeightGrams: number;
   totalCost: number;
   ingredient: Ingredient;
 }
@@ -125,25 +240,34 @@ export function calculateRecipe(
   const components: CalculatedComponent[] = [...recipe.components]
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map((comp) => {
-      let compGrams = 0;
+      let compWeightGrams = 0;
       let compCost = 0;
 
       const lines: CalculatedIngredientLine[] = comp.ingredients.map((item) => {
-        const scaledGrams = item.baseGrams * coefficient;
-        const cost = (scaledGrams / 1000) * item.ingredient.pricePerKg;
-        compGrams += scaledGrams;
+        const unitType = normalizeUnitType(item.ingredient.unitType);
+        const scaledQty = item.baseGrams * coefficient;
+        const scaledWeightGrams = calculateIngredientWeightGrams(
+          scaledQty,
+          item.ingredient
+        );
+        const cost = calculateIngredientCost(scaledQty, item.ingredient);
+        compWeightGrams += scaledWeightGrams;
         compCost += cost;
 
         const existing = aggregatedMap.get(item.ingredientId);
         if (existing) {
-          existing.totalGrams += scaledGrams;
+          existing.totalGrams += scaledQty;
+          existing.totalWeightGrams += scaledWeightGrams;
           existing.totalCost += cost;
         } else {
           aggregatedMap.set(item.ingredientId, {
             ingredientId: item.ingredientId,
             name: item.ingredient.name,
+            unitType,
+            unitWeightGrams: item.ingredient.unitWeightGrams || 0,
             pricePerKg: item.ingredient.pricePerKg,
-            totalGrams: scaledGrams,
+            totalGrams: scaledQty,
+            totalWeightGrams: scaledWeightGrams,
             totalCost: cost,
             ingredient: item.ingredient,
           });
@@ -153,9 +277,11 @@ export function calculateRecipe(
           id: item.id,
           ingredientId: item.ingredientId,
           name: item.ingredient.name,
+          unitType,
           pricePerKg: item.ingredient.pricePerKg,
           baseGrams: item.baseGrams,
-          scaledGrams,
+          scaledGrams: scaledQty,
+          scaledWeightGrams,
           cost,
         };
       });
@@ -165,7 +291,7 @@ export function calculateRecipe(
         name: comp.name,
         sortOrder: comp.sortOrder,
         lines,
-        totalGrams: compGrams,
+        totalGrams: compWeightGrams,
         totalCost: compCost,
       };
     });
@@ -224,8 +350,12 @@ export function calculateRecipe(
 export interface ShoppingListItem {
   ingredientId: number;
   name: string;
+  unitType: IngredientUnitType;
   pricePerKg: number;
+  /** Exact summed quantity in ingredient's own unit (г, мл, or шт) */
   totalGrams: number;
+  /** Purchase quantity (ceiled to whole number for piece items) */
+  purchaseQuantity: number;
   estimatedCost: number;
 }
 
@@ -239,7 +369,17 @@ export function calculateProcurementList(
   totalCakesCount: number;
 } {
   const recipeMap = new Map(recipes.map((r) => [r.id, r]));
-  const map = new Map<number, ShoppingListItem>();
+  const map = new Map<
+    number,
+    {
+      ingredientId: number;
+      name: string;
+      unitType: IngredientUnitType;
+      unitWeightGrams: number;
+      pricePerKg: number;
+      totalQty: number;
+    }
+  >();
   let totalCakesCount = 0;
 
   for (const planItem of items) {
@@ -251,29 +391,57 @@ export function calculateProcurementList(
     const calc = calculateRecipe(recipe, planItem.diameter);
 
     for (const agg of calc.aggregated) {
-      const grams = agg.totalGrams * planItem.quantity;
-      const cost = agg.totalCost * planItem.quantity;
+      const qty = agg.totalGrams * planItem.quantity;
       const existing = map.get(agg.ingredientId);
       if (existing) {
-        existing.totalGrams += grams;
-        existing.estimatedCost += cost;
+        existing.totalQty += qty;
       } else {
         map.set(agg.ingredientId, {
           ingredientId: agg.ingredientId,
           name: agg.name,
+          unitType: agg.unitType,
+          unitWeightGrams: agg.unitWeightGrams,
           pricePerKg: agg.pricePerKg,
-          totalGrams: grams,
-          estimatedCost: cost,
+          totalQty: qty,
         });
       }
     }
   }
 
-  const shoppingList = Array.from(map.values()).sort((a, b) =>
-    a.name.localeCompare(b.name, "uk")
-  );
+  const shoppingList: ShoppingListItem[] = Array.from(map.values())
+    .map((entry) => {
+      const purchaseQuantity =
+        entry.unitType === "piece"
+          ? entry.totalQty > 0
+            ? Math.ceil(Math.round(entry.totalQty * 10) / 10 - 1e-9)
+            : 0
+          : entry.totalQty;
+      const estimatedCost = calculateIngredientCost(purchaseQuantity, {
+        unitType: entry.unitType,
+        pricePerKg: entry.pricePerKg,
+      });
+      return {
+        ingredientId: entry.ingredientId,
+        name: entry.name,
+        unitType: entry.unitType,
+        pricePerKg: entry.pricePerKg,
+        totalGrams: entry.totalQty,
+        purchaseQuantity,
+        estimatedCost,
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, "uk"));
+
   const totalBudget = shoppingList.reduce((s, i) => s + i.estimatedCost, 0);
-  const totalWeightGrams = shoppingList.reduce((s, i) => s + i.totalGrams, 0);
+  const totalWeightGrams = Array.from(map.values()).reduce(
+    (s, entry) =>
+      s +
+      calculateIngredientWeightGrams(entry.totalQty, {
+        unitType: entry.unitType,
+        unitWeightGrams: entry.unitWeightGrams,
+      }),
+    0
+  );
 
   return {
     shoppingList,
@@ -323,7 +491,8 @@ export function calculateKbju(
   );
 
   const ratio100 = effectiveWeight > 0 ? 100 / effectiveWeight : 0;
-  const ratioPortion = effectiveWeight > 0 ? effectivePortion / effectiveWeight : 0;
+  const ratioPortion =
+    effectiveWeight > 0 ? effectivePortion / effectiveWeight : 0;
 
   const r1 = (v: number) => Math.round(v * 10) / 10;
 
@@ -392,7 +561,6 @@ export function scaleRecipeText(text: string, factor: number): string {
   const lines = text.split("\n");
   return lines
     .map((line) => {
-      // Match numbers optionally followed by units, excluding percentages and temperatures
       return line.replace(
         /(\d+(?:[.,]\d+)?)\s*(%|°[CcСс]?|кг|г|гр|мл|л|шт|ст\.?\s*л\.?|ч\.?\s*л\.?)?/gi,
         (match, numStr: string, unit?: string) => {
@@ -400,7 +568,6 @@ export function scaleRecipeText(text: string, factor: number): string {
           if (trimmedUnit === "%" || trimmedUnit.startsWith("°")) {
             return match;
           }
-          // Skip numbers that look like fat percentages attached to words if no unit and followed by %
           const val = parseFloat(numStr.replace(",", "."));
           if (!Number.isFinite(val)) return match;
           const scaled = val * factor;

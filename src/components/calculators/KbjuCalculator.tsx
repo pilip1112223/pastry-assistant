@@ -3,11 +3,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertCircle, Copy, Plus, Trash2 } from "lucide-react";
-import type { Ingredient, RecipeWithDetails } from "@/types/pastry";
+import type {
+  Ingredient,
+  IngredientUnitType,
+  RecipeWithDetails,
+} from "@/types/pastry";
 import { DIAMETERS } from "@/types/pastry";
 import {
+  calculateIngredientWeightGrams,
   calculateKbju,
   calculateRecipe,
+  getRecipeUnitLabel,
   roundGrams,
 } from "@/lib/calculations";
 import { hapticImpact, hapticNotification } from "@/lib/telegram";
@@ -26,6 +32,8 @@ interface KbjuCalculatorProps {
 interface ManualKbjuRow {
   id: string;
   ingredientId: string; // "" = custom
+  unitType: IngredientUnitType;
+  unitWeightGrams: number;
   name: string;
   grams: string;
   kcal: string;
@@ -38,6 +46,8 @@ function makeManualRow(): ManualKbjuRow {
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     ingredientId: "",
+    unitType: "weight",
+    unitWeightGrams: 0,
     name: "",
     grams: "",
     kcal: "0",
@@ -97,21 +107,28 @@ export function KbjuCalculator({
     if (source === "recipe" && recipeCalc) {
       return recipeCalc.aggregated.map((a) => ({
         name: a.name,
-        grams: a.totalGrams,
+        grams: a.totalWeightGrams,
         calories100g: a.ingredient.calories100g,
         protein100g: a.ingredient.protein100g,
         fat100g: a.ingredient.fat100g,
         carbs100g: a.ingredient.carbs100g,
       }));
     }
-    return manualRows.map((r) => ({
-      name: r.name,
-      grams: parseFloat(r.grams.replace(",", ".")) || 0,
-      calories100g: parseFloat(r.kcal.replace(",", ".")) || 0,
-      protein100g: parseFloat(r.protein.replace(",", ".")) || 0,
-      fat100g: parseFloat(r.fat.replace(",", ".")) || 0,
-      carbs100g: parseFloat(r.carbs.replace(",", ".")) || 0,
-    }));
+    return manualRows.map((r) => {
+      const rawQty = parseFloat(r.grams.replace(",", ".")) || 0;
+      const grams = calculateIngredientWeightGrams(rawQty, {
+        unitType: r.unitType,
+        unitWeightGrams: r.unitWeightGrams,
+      });
+      return {
+        name: r.name,
+        grams,
+        calories100g: parseFloat(r.kcal.replace(",", ".")) || 0,
+        protein100g: parseFloat(r.protein.replace(",", ".")) || 0,
+        fat100g: parseFloat(r.fat.replace(",", ".")) || 0,
+        carbs100g: parseFloat(r.carbs.replace(",", ".")) || 0,
+      };
+    });
   }, [source, recipeCalc, manualRows]);
 
   const missingKbjuNames = useMemo(
@@ -155,10 +172,19 @@ export function KbjuCalculator({
     setManualRows((prev) =>
       prev.map((r) => {
         if (r.id !== rowId) return r;
-        if (!ing) return { ...r, ingredientId: "" };
+        if (!ing) {
+          return {
+            ...r,
+            ingredientId: "",
+            unitType: "weight",
+            unitWeightGrams: 0,
+          };
+        }
         return {
           ...r,
           ingredientId: ingIdStr,
+          unitType: ing.unitType ?? "weight",
+          unitWeightGrams: ing.unitWeightGrams || 0,
           name: ing.name,
           kcal: String(ing.calories100g || 0),
           protein: String(ing.protein100g || 0),
@@ -482,7 +508,7 @@ export function KbjuCalculator({
                       updateManualRow(row.id, "grams", e.target.value)
                     }
                     placeholder="0"
-                    suffix="г"
+                    suffix={getRecipeUnitLabel(row.unitType)}
                     wrapperClassName="w-24 shrink-0"
                     className="text-right font-bold tabular-nums"
                   />

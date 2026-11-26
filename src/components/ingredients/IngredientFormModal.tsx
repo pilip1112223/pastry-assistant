@@ -1,10 +1,15 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronUp, Flame, Scale } from "lucide-react";
-import type { Ingredient } from "@/types/pastry";
+import { ChevronDown, ChevronUp, Flame, Info, Scale } from "lucide-react";
+import type { Ingredient, IngredientUnitType } from "@/types/pastry";
 import { CURRENCIES } from "@/types/pastry";
-import { formatMoney } from "@/lib/calculations";
+import {
+  formatMoney,
+  getPriceUnitLabel,
+  getRecipeUnitLabel,
+} from "@/lib/calculations";
+import { apiFetch } from "@/lib/api-client";
 import { hapticImpact, hapticNotification } from "@/lib/telegram";
 import { useApp } from "@/components/providers/AppProvider";
 import { Modal } from "@/components/ui/modal";
@@ -19,6 +24,16 @@ interface IngredientFormModalProps {
   onSaved: (ingredient: Ingredient) => void;
 }
 
+const UNIT_OPTIONS: Array<{
+  id: IngredientUnitType;
+  label: string;
+  sublabel: string;
+}> = [
+  { id: "weight", label: "г / кг", sublabel: "Вага" },
+  { id: "volume", label: "мл / л", sublabel: "Об'єм" },
+  { id: "piece", label: "шт", sublabel: "Поштучно" },
+];
+
 export function IngredientFormModal({
   open,
   onClose,
@@ -29,10 +44,12 @@ export function IngredientFormModal({
   const { currency, showToast } = useApp();
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState("");
-  const [priceMode, setPriceMode] = useState<"pack" | "kg">("pack");
-  const [pricePerKgInput, setPricePerKgInput] = useState("");
+  const [unitType, setUnitType] = useState<IngredientUnitType>("weight");
+  const [priceMode, setPriceMode] = useState<"pack" | "unit">("pack");
+  const [directPriceInput, setDirectPriceInput] = useState("");
   const [packPrice, setPackPrice] = useState("");
-  const [packWeight, setPackWeight] = useState("");
+  const [packAmount, setPackAmount] = useState("");
+  const [unitWeightGrams, setUnitWeightGrams] = useState("");
   const [showKbju, setShowKbju] = useState(false);
   const [calories, setCalories] = useState("0");
   const [protein, setProtein] = useState("0");
@@ -45,10 +62,14 @@ export function IngredientFormModal({
     setNameError("");
     if (editing) {
       setName(editing.name);
-      setPriceMode("kg");
-      setPricePerKgInput(String(editing.pricePerKg));
+      setUnitType(editing.unitType ?? "weight");
+      setPriceMode("unit");
+      setDirectPriceInput(String(editing.pricePerKg));
       setPackPrice("");
-      setPackWeight("");
+      setPackAmount("");
+      setUnitWeightGrams(
+        editing.unitWeightGrams > 0 ? String(editing.unitWeightGrams) : ""
+      );
       const hasKbju =
         editing.calories100g > 0 ||
         editing.protein100g > 0 ||
@@ -61,10 +82,12 @@ export function IngredientFormModal({
       setCarbs(String(editing.carbs100g || 0));
     } else {
       setName(initialName);
+      setUnitType("weight");
       setPriceMode("pack");
-      setPricePerKgInput("");
+      setDirectPriceInput("");
       setPackPrice("");
-      setPackWeight("");
+      setPackAmount("");
+      setUnitWeightGrams("");
       setShowKbju(false);
       setCalories("0");
       setProtein("0");
@@ -73,18 +96,21 @@ export function IngredientFormModal({
     }
   }, [open, editing, initialName]);
 
-  const computedPricePerKg = useMemo(() => {
-    if (priceMode === "kg") {
-      const val = parseFloat(pricePerKgInput.replace(",", "."));
+  const computedUnitPrice = useMemo(() => {
+    if (priceMode === "unit") {
+      const val = parseFloat(directPriceInput.replace(",", "."));
       return Number.isFinite(val) && val >= 0 ? val : 0;
     }
     const p = parseFloat(packPrice.replace(",", "."));
-    const w = parseFloat(packWeight.replace(",", "."));
-    if (!Number.isFinite(p) || !Number.isFinite(w) || p < 0 || w <= 0) {
+    const amount = parseFloat(packAmount.replace(",", "."));
+    if (!Number.isFinite(p) || !Number.isFinite(amount) || p < 0 || amount <= 0) {
       return 0;
     }
-    return Math.round((p / w) * 1000 * 100) / 100;
-  }, [priceMode, pricePerKgInput, packPrice, packWeight]);
+    if (unitType === "piece") {
+      return Math.round((p / amount) * 100) / 100;
+    }
+    return Math.round((p / amount) * 1000 * 100) / 100;
+  }, [priceMode, directPriceInput, packPrice, packAmount, unitType]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -98,7 +124,12 @@ export function IngredientFormModal({
     try {
       const payload = {
         name: name.trim(),
-        pricePerKg: computedPricePerKg,
+        unitType,
+        pricePerKg: computedUnitPrice,
+        unitWeightGrams:
+          unitType === "piece"
+            ? Math.max(0, parseFloat(unitWeightGrams.replace(",", ".")) || 0)
+            : 0,
         calories100g: parseFloat(calories.replace(",", ".")) || 0,
         protein100g: parseFloat(protein.replace(",", ".")) || 0,
         fat100g: parseFloat(fat.replace(",", ".")) || 0,
@@ -110,7 +141,7 @@ export function IngredientFormModal({
         : "/api/ingredients";
       const method = editing ? "PATCH" : "POST";
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -142,6 +173,38 @@ export function IngredientFormModal({
   }
 
   const sym = CURRENCIES[currency].symbol;
+  const priceUnit = getPriceUnitLabel(unitType);
+  const recipeUnit = getRecipeUnitLabel(unitType);
+
+  const packAmountLabel =
+    unitType === "piece"
+      ? "Кількість в упаковці"
+      : unitType === "volume"
+      ? "Об'єм упаковки"
+      : "Вага упаковки";
+
+  const packAmountPlaceholder =
+    unitType === "piece" ? "10" : unitType === "volume" ? "500" : "180";
+
+  const packPricePlaceholder =
+    unitType === "piece" ? "65" : unitType === "volume" ? "115" : "95";
+
+  const directPriceLabel =
+    unitType === "piece"
+      ? "Ціна за 1 шт"
+      : unitType === "volume"
+      ? "Ціна за 1 л"
+      : "Ціна за 1 кг";
+
+  const directPricePlaceholder =
+    unitType === "piece" ? "6.5" : unitType === "volume" ? "230" : "520";
+
+  const namePlaceholder =
+    unitType === "piece"
+      ? "Наприклад: Яйця курячі С1 або Коробка 24×24"
+      : unitType === "volume"
+      ? "Наприклад: Вершки 33% або Молоко 3,2%"
+      : "Наприклад: Масло вершкове 82,5%";
 
   return (
     <Modal
@@ -150,11 +213,45 @@ export function IngredientFormModal({
       title={editing ? "Редагувати продукт" : "Новий продукт"}
       subtitle={
         editing
-          ? "Зміна ціни автоматично оновить усі техкарти"
-          : "Вкажіть ціну за упаковку або одразу за 1 кг"
+          ? "Зміна ціни або одиниць автоматично оновить усі техкарти"
+          : "Оберіть одиницю виміру та вкажіть ціну"
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4 pb-2" noValidate>
+        {/* Unit Type Selector */}
+        <div>
+          <label className="block text-xs font-bold text-[var(--app-hint)] mb-1.5">
+            Одиниця виміру
+          </label>
+          <div className="grid grid-cols-3 gap-1.5 rounded-[15px] bg-[var(--app-subtle)] p-1 border border-[var(--app-border)]">
+            {UNIT_OPTIONS.map((opt) => {
+              const active = unitType === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    hapticImpact("light");
+                    setUnitType(opt.id);
+                  }}
+                  className={`min-h-[44px] rounded-[11px] px-2 py-1.5 transition-all cursor-pointer ${
+                    active
+                      ? "bg-[var(--app-card)] text-[var(--app-accent)] shadow-[0_1px_4px_rgba(42,30,23,0.08)]"
+                      : "text-[var(--app-hint)] hover:text-[var(--app-text)]"
+                  }`}
+                >
+                  <div className="text-[13px] font-extrabold leading-tight">
+                    {opt.label}
+                  </div>
+                  <div className="text-[10px] font-semibold opacity-80 leading-tight mt-0.5">
+                    {opt.sublabel}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div>
           <label className="block text-xs font-bold text-[var(--app-hint)] mb-1.5">
             Назва продукту *
@@ -165,7 +262,7 @@ export function IngredientFormModal({
               setName(e.target.value);
               if (nameError) setNameError("");
             }}
-            placeholder="Наприклад: Масло вершкове 82,5%"
+            placeholder={namePlaceholder}
             error={nameError}
             autoFocus
             required
@@ -196,15 +293,15 @@ export function IngredientFormModal({
               type="button"
               onClick={() => {
                 hapticImpact("light");
-                setPriceMode("kg");
+                setPriceMode("unit");
               }}
               className={`min-h-[40px] rounded-[11px] py-2 text-xs font-bold transition-all cursor-pointer ${
-                priceMode === "kg"
+                priceMode === "unit"
                   ? "bg-[var(--app-card)] text-[var(--app-text)] shadow-[0_1px_4px_rgba(42,30,23,0.08)]"
                   : "text-[var(--app-hint)] hover:text-[var(--app-text)]"
               }`}
             >
-              Одразу за 1 кг
+              Одразу за 1 {priceUnit}
             </button>
           </div>
         </div>
@@ -214,17 +311,17 @@ export function IngredientFormModal({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-[var(--app-hint)] mb-1.5">
-                  Вага упаковки
+                  {packAmountLabel}
                 </label>
                 <Input
                   type="number"
                   inputMode="decimal"
-                  min="1"
+                  min="0.1"
                   step="any"
-                  value={packWeight}
-                  onChange={(e) => setPackWeight(e.target.value)}
-                  placeholder="180"
-                  suffix="г"
+                  value={packAmount}
+                  onChange={(e) => setPackAmount(e.target.value)}
+                  placeholder={packAmountPlaceholder}
+                  suffix={recipeUnit}
                   className="tabular-nums"
                 />
               </div>
@@ -239,7 +336,7 @@ export function IngredientFormModal({
                   step="any"
                   value={packPrice}
                   onChange={(e) => setPackPrice(e.target.value)}
-                  placeholder="95"
+                  placeholder={packPricePlaceholder}
                   suffix={sym}
                   className="tabular-nums"
                 />
@@ -252,29 +349,57 @@ export function IngredientFormModal({
                   className="h-4 w-4 text-[var(--app-accent)]"
                   strokeWidth={2}
                 />
-                Перерахунок за 1 кг:
+                Ціна за 1 {priceUnit}:
               </span>
               <span className="text-[15px] font-extrabold tabular-nums text-[var(--app-accent)]">
-                {formatMoney(computedPricePerKg, currency)} / кг
+                {formatMoney(computedUnitPrice, currency)} / {priceUnit}
               </span>
             </div>
           </div>
         ) : (
           <div>
             <label className="block text-xs font-bold text-[var(--app-hint)] mb-1.5">
-              Ціна за 1 кг
+              {directPriceLabel}
             </label>
             <Input
               type="number"
               inputMode="decimal"
               min="0"
               step="any"
-              value={pricePerKgInput}
-              onChange={(e) => setPricePerKgInput(e.target.value)}
-              placeholder="520"
+              value={directPriceInput}
+              onChange={(e) => setDirectPriceInput(e.target.value)}
+              placeholder={directPricePlaceholder}
               suffix={sym}
               className="tabular-nums"
             />
+          </div>
+        )}
+
+        {/* Optional Unit Weight for Piece Items */}
+        {unitType === "piece" && (
+          <div className="rounded-[16px] border border-[var(--app-border)] bg-[var(--app-bg)]/80 p-3.5 space-y-2">
+            <label className="block text-xs font-bold text-[var(--app-text)]">
+              Вага 1 шт в грамах (необов&apos;язково)
+            </label>
+            <Input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="any"
+              value={unitWeightGrams}
+              onChange={(e) => setUnitWeightGrams(e.target.value)}
+              placeholder="0"
+              suffix="г"
+              className="tabular-nums"
+            />
+            <p className="flex items-start gap-1.5 text-[11.5px] text-[var(--app-hint)] leading-relaxed">
+              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-[var(--app-accent)]" />
+              <span>
+                Наприклад: для яйця ~55 г, для стручка ванілі ~4 г, для коробки
+                або підкладки — 0 г. Потрібно для точного розрахунку ваги торта
+                та КБЖВ.
+              </span>
+            </p>
           </div>
         )}
 

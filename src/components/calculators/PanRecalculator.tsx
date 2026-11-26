@@ -5,7 +5,8 @@ import { ArrowRight, Copy } from "lucide-react";
 import type { RecipeWithDetails } from "@/types/pastry";
 import {
   getPanRatio,
-  roundGrams,
+  getRecipeUnitLabel,
+  roundQuantity,
   scaleRecipeText,
   type PanShape,
   type PanSpec,
@@ -94,10 +95,14 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
         `${selectedRecipe.name} (коефіцієнт ×${factor.toFixed(2)})`,
         ...selectedRecipe.components.map((c) => {
           const lines = c.ingredients
-            .map(
-              (ci) =>
-                `• ${ci.ingredient.name}: ${roundGrams(ci.baseGrams * factor)} г`
-            )
+            .map((ci) => {
+              const unitType = ci.ingredient.unitType ?? "weight";
+              const unitLabel = getRecipeUnitLabel(unitType);
+              return `• ${ci.ingredient.name}: ${roundQuantity(
+                ci.baseGrams * factor,
+                unitType
+              )} ${unitLabel}`;
+            })
             .join("\n");
           return `\n${c.name}:\n${lines}`;
         }),
@@ -494,25 +499,31 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                       {comp.name}
                     </div>
                     <div className="divide-y divide-[var(--app-border)]">
-                      {comp.ingredients.map((ci) => (
-                        <div
-                          key={ci.id}
-                          className="flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm"
-                        >
-                          <span className="truncate font-medium">
-                            {ci.ingredient.name}
-                          </span>
-                          <span className="flex items-center gap-1.5 shrink-0 tabular-nums text-xs">
-                            <span className="text-[var(--app-hint)]">
-                              {roundGrams(ci.baseGrams)} г
+                      {comp.ingredients.map((ci) => {
+                        const unitType = ci.ingredient.unitType ?? "weight";
+                        const unitLabel = getRecipeUnitLabel(unitType);
+                        return (
+                          <div
+                            key={ci.id}
+                            className="flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm"
+                          >
+                            <span className="truncate font-medium">
+                              {ci.ingredient.name}
                             </span>
-                            <ArrowRight className="h-3.5 w-3.5 text-[var(--app-hint)]" />
-                            <strong className="rounded-full bg-[var(--app-accent-soft)] px-2.5 py-0.5 text-[13px] font-extrabold text-[var(--app-accent)]">
-                              {roundGrams(ci.baseGrams * factor)} г
-                            </strong>
-                          </span>
-                        </div>
-                      ))}
+                            <span className="flex items-center gap-1.5 shrink-0 tabular-nums text-xs">
+                              <span className="text-[var(--app-hint)]">
+                                {roundQuantity(ci.baseGrams, unitType)}{" "}
+                                {unitLabel}
+                              </span>
+                              <ArrowRight className="h-3.5 w-3.5 text-[var(--app-hint)]" />
+                              <strong className="rounded-full bg-[var(--app-accent-soft)] px-2.5 py-0.5 text-[13px] font-extrabold text-[var(--app-accent)]">
+                                {roundQuantity(ci.baseGrams * factor, unitType)}{" "}
+                                {unitLabel}
+                              </strong>
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
