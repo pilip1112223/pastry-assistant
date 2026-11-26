@@ -8,12 +8,14 @@ import React, {
   useState,
 } from "react";
 import { AlertCircle, CheckCircle2, Info } from "lucide-react";
-import type { CurrencyCode } from "@/types/pastry";
+import type { CurrencyCode, UserAccessInfo } from "@/types/pastry";
 import { CURRENCIES } from "@/types/pastry";
 import {
   getClientIdentity,
   hapticImpact,
+  hapticNotification,
   initTelegramWebApp,
+  openTelegramInvoice,
 } from "@/lib/telegram";
 import { apiFetch } from "@/lib/api-client";
 
@@ -30,6 +32,11 @@ interface AppContextValue {
   isTelegram: boolean;
   userId: string;
   userDisplayName: string;
+  access: UserAccessInfo | null;
+  accessLoading: boolean;
+  paymentLoading: boolean;
+  refreshAccess: () => Promise<UserAccessInfo | null>;
+  startSubscriptionPayment: () => Promise<void>;
   showToast: (text: string, type?: "default" | "success" | "error") => void;
 }
 
@@ -37,13 +44,45 @@ const AppContext = createContext<AppContextValue | null>(null);
 
 const CURRENCY_STORAGE_KEY = "pastry_assistant_currency";
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrencyState] = useState<CurrencyCode>("UAH");
   const [storageMode, setStorageMode] = useState<"neon" | "local" | null>(null);
   const [isTelegram, setIsTelegram] = useState(false);
   const [userId, setUserId] = useState("");
   const [userDisplayName, setUserDisplayName] = useState("Гість (браузер)");
+  const [access, setAccess] = useState<UserAccessInfo | null>(null);
+  const [accessLoading, setAccessLoading] = useState(true);
+  const [paymentLoading, setPaymentLoading] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const showToast = useCallback(
+    (text: string, type: "default" | "success" | "error" = "default") => {
+      const id = Date.now() + Math.random();
+      setToasts((prev) => [...prev, { id, text, type }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 3200);
+    },
+    []
+  );
+
+  const refreshAccess = useCallback(async (): Promise<UserAccessInfo | null> => {
+    try {
+      const res = await apiFetch("/api/user/access", { cache: "no-store" });
+      if (!res.ok) return null;
+      const data = (await res.json()) as UserAccessInfo;
+      setAccess(data);
+      return data;
+    } catch {
+      return null;
+    } finally {
+      setAccessLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -70,6 +109,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     initTelegramWebApp().then((inTg) => {
       if (inTg) setIsTelegram(true);
       syncIdentity();
+      refreshAccess();
     });
 
     apiFetch("/api/status")
@@ -80,7 +120,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
       })
       .catch(() => null);
-  }, []);
+  }, [refreshAccess]);
 
   const setCurrency = useCallback((code: CurrencyCode) => {
     hapticImpact("light");
@@ -92,16 +132,60 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const showToast = useCallback(
-    (text: string, type: "default" | "success" | "error" = "default") => {
-      const id = Date.now() + Math.random();
-      setToasts((prev) => [...prev, { id, text, type }]);
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 3000);
-    },
-    []
-  );
+  const startSubscriptionPayment = useCallback(async () => {
+    if (paymentLoading) return;
+    hapticImpact("medium");
+    setPaymentLoading(true);
+
+    try {
+      const res = await apiFetch("/api/payments/create-invoice", {
+        method: "POST",
+      });
+      const data = (await res.json()) as {
+        invoiceUrl?: string;
+        error?: string;
+      };
+
+      if (!res.ok || !data.invoiceUrl) {
+        throw new Error(data.error || "Не вдалося відкрити оплату");
+      }
+
+      const invoiceStatus = await openTelegramInvoice(data.invoiceUrl);
+
+      if (invoiceStatus === "paid") {
+        hapticNotification("success");
+        // Immediately refresh + poll 2 times in case Telegram webhook takes a moment
+        let latest = await refreshAccess();
+        if (!latest?.hasAccess || latest.status !== "active") {
+          await sleep(1200);
+          latest = await refreshAccess();
+        }
+        if (!latest?.hasAccess || latest.status !== "active") {
+          await sleep(2200);
+          await refreshAccess();
+        }
+        showToast("Підписку успішно активовано!", "success");
+      } else if (invoiceStatus === "cancelled") {
+        showToast("Оплату скасовано", "default");
+      } else if (invoiceStatus === "failed") {
+        hapticNotification("error");
+        showToast("Не вдалося завершити оплату", "error");
+      } else if (invoiceStatus === "unsupported") {
+        showToast(
+          "Відкрийте застосунок у Telegram для оплати через Telegram Stars",
+          "default"
+        );
+      }
+    } catch (err) {
+      hapticNotification("error");
+      showToast(
+        err instanceof Error ? err.message : "Помилка запуску оплати",
+        "error"
+      );
+    } finally {
+      setPaymentLoading(false);
+    }
+  }, [paymentLoading, refreshAccess, showToast]);
 
   return (
     <AppContext.Provider
@@ -112,6 +196,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         isTelegram,
         userId,
         userDisplayName,
+        access,
+        accessLoading,
+        paymentLoading,
+        refreshAccess,
+        startSubscriptionPayment,
         showToast,
       }}
     >

@@ -22,6 +22,10 @@ interface TelegramWebAppInstance {
   ready: () => void;
   expand: () => void;
   openTelegramLink?: (url: string) => void;
+  openInvoice?: (
+    url: string,
+    callback?: (status: "paid" | "cancelled" | "failed" | "pending") => void
+  ) => void;
   HapticFeedback?: {
     impactOccurred: (style: ImpactStyle) => void;
     notificationOccurred: (type: NotificationType) => void;
@@ -208,6 +212,28 @@ export function openTelegramShare(text: string): void {
     // Fallback to browser open
   }
   window.open(shareUrl, "_blank", "noopener,noreferrer");
+}
+
+export function openTelegramInvoice(
+  invoiceUrl: string
+): Promise<"paid" | "cancelled" | "failed" | "pending" | "unsupported"> {
+  if (typeof window === "undefined") {
+    return Promise.resolve("unsupported");
+  }
+  const wa = getWindowWebApp() ?? cachedWebApp;
+  if (wa && typeof wa.openInvoice === "function") {
+    return new Promise((resolve) => {
+      try {
+        wa.openInvoice!(invoiceUrl, (status) => {
+          resolve(status);
+        });
+      } catch {
+        resolve("failed");
+      }
+    });
+  }
+  window.open(invoiceUrl, "_blank", "noopener,noreferrer");
+  return Promise.resolve("unsupported");
 }
 
 export function useTelegramBackButton(onBack?: () => void): void {

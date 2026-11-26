@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { resolveRequestUserId } from "@/lib/auth";
+import { requireActiveAccess } from "@/lib/users";
 import { deleteRecipe, getRecipeById, updateRecipe } from "@/lib/store";
 
 const recipeSchema = z.object({
@@ -33,10 +33,8 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const auth = resolveRequestUserId(request);
-    if (!auth.ok) {
-      return NextResponse.json({ error: auth.error }, { status: auth.status });
-    }
+    const auth = await requireActiveAccess(request);
+    if (!auth.ok) return auth.response;
     const { id } = await context.params;
     const numericId = Number(id);
     if (!Number.isInteger(numericId) || numericId <= 0) {
@@ -61,10 +59,8 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const auth = resolveRequestUserId(request);
-    if (!auth.ok) {
-      return NextResponse.json({ error: auth.error }, { status: auth.status });
-    }
+    const auth = await requireActiveAccess(request);
+    if (!auth.ok) return auth.response;
     const { id } = await context.params;
     const numericId = Number(id);
     if (!Number.isInteger(numericId) || numericId <= 0) {
@@ -97,10 +93,8 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const auth = resolveRequestUserId(request);
-    if (!auth.ok) {
-      return NextResponse.json({ error: auth.error }, { status: auth.status });
-    }
+    const auth = await requireActiveAccess(request);
+    if (!auth.ok) return auth.response;
     const { id } = await context.params;
     const numericId = Number(id);
     if (!Number.isInteger(numericId) || numericId <= 0) {

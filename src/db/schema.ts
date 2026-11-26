@@ -6,9 +6,46 @@ import {
   doublePrecision,
   timestamp,
   jsonb,
+  boolean,
   index,
 } from "drizzle-orm/pg-core";
 import type { IngredientUnitType, ProcurementPlanItem } from "@/types/pastry";
+
+export const users = pgTable(
+  "users",
+  {
+    id: serial("id").primaryKey(),
+    telegramId: text("telegram_id").notNull().unique(),
+    username: text("username"),
+    firstName: text("first_name"),
+    trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }).notNull(),
+    subscriptionEndsAt: timestamp("subscription_ends_at", {
+      withTimezone: true,
+    }),
+    isUnlimited: boolean("is_unlimited").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("users_telegram_id_idx").on(table.telegramId)]
+);
+
+export const payments = pgTable(
+  "payments",
+  {
+    id: serial("id").primaryKey(),
+    telegramId: text("telegram_id").notNull(),
+    amountStars: integer("amount_stars").notNull(),
+    daysAdded: integer("days_added").notNull(),
+    telegramPaymentChargeId: text("telegram_payment_charge_id")
+      .notNull()
+      .unique(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("payments_telegram_id_idx").on(table.telegramId)]
+);
 
 export const ingredients = pgTable(
   "ingredients",
@@ -24,7 +61,7 @@ export const ingredients = pgTable(
     unitWeightGrams: doublePrecision("unit_weight_grams").notNull().default(0),
     calories100g: doublePrecision("calories_100g").notNull().default(0),
     protein100g: doublePrecision("protein_100g").notNull().default(0),
-    fat100g: doublePrecision("fat_100g").notNull().default(0),
+    fat100g: doublePrecision("fat100g").notNull().default(0),
     carbs100g: doublePrecision("carbs_100g").notNull().default(0),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()

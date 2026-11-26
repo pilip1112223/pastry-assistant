@@ -113,3 +113,56 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
 };
 
 export const DIAMETERS = [10, 12, 14, 16, 18, 20, 22, 24, 26] as const;
+
+export const SUBSCRIPTION_STARS_PRICE = 500;
+export const SUBSCRIPTION_DURATION_DAYS = 30;
+export const TRIAL_DURATION_DAYS = 3;
+
+export type AccessStatus =
+  | "admin"
+  | "unlimited"
+  | "active"
+  | "trial"
+  | "expired";
+
+export interface UserRecord {
+  id: number;
+  telegramId: string;
+  username: string | null;
+  firstName: string | null;
+  trialEndsAt: string;
+  subscriptionEndsAt: string | null;
+  isUnlimited: boolean;
+  createdAt: string;
+}
+
+export interface UserAccessInfo {
+  telegramId: string;
+  username: string | null;
+  firstName: string | null;
+  isAdmin: boolean;
+  isUnlimited: boolean;
+  hasAccess: boolean;
+  status: AccessStatus;
+  trialEndsAt: string;
+  subscriptionEndsAt: string | null;
+  trialDaysLeft: number;
+  subscriptionDaysLeft: number;
+}
+
+export interface PaymentRecord {
+  id: number;
+  telegramId: string;
+  amountStars: number;
+  daysAdded: number;
+  telegramPaymentChargeId: string;
+  createdAt: string;
+  username?: string | null;
+  firstName?: string | null;
+}
+
+export interface AdminUserView extends UserRecord {
+  isAdmin: boolean;
+  hasAccess: boolean;
+  status: AccessStatus;
+}

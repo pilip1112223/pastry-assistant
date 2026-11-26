@@ -1,15 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CakeSlice,
   Calculator,
   Check,
+  Clock,
+  Crown,
   Database,
   Package,
   Settings,
+  ShieldCheck,
   ShoppingBasket,
   Sparkles,
   UserCheck,
@@ -18,9 +21,23 @@ import { cn } from "@/lib/utils";
 import { hapticImpact } from "@/lib/telegram";
 import { useApp } from "@/components/providers/AppProvider";
 import { Modal } from "@/components/ui/modal";
-import { CURRENCIES, type CurrencyCode } from "@/types/pastry";
+import { Button } from "@/components/ui/button";
+import { PaywallScreen } from "@/components/access/PaywallScreen";
+import {
+  CURRENCIES,
+  SUBSCRIPTION_STARS_PRICE,
+  type CurrencyCode,
+} from "@/types/pastry";
 
-const NAV_ITEMS = [
+interface NavItem {
+  href: string;
+  label: string;
+  shortLabel: string;
+  icon: React.ElementType;
+  match: (path: string) => boolean;
+}
+
+const BASE_NAV_ITEMS: NavItem[] = [
   {
     href: "/",
     label: "Мої торти",
@@ -51,6 +68,27 @@ const NAV_ITEMS = [
   },
 ];
 
+const ADMIN_NAV_ITEM: NavItem = {
+  href: "/admin",
+  label: "Адмінка",
+  shortLabel: "Адмінка",
+  icon: ShieldCheck,
+  match: (path: string) => path.startsWith("/admin"),
+};
+
+function formatDateUk(iso?: string | null): string {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleDateString("uk-UA", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  } catch {
+    return "—";
+  }
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const {
@@ -60,8 +98,47 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     isTelegram,
     userId,
     userDisplayName,
+    access,
+    accessLoading,
+    paymentLoading,
+    startSubscriptionPayment,
   } = useApp();
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const navItems = useMemo(
+    () =>
+      access?.isAdmin ? [...BASE_NAV_ITEMS, ADMIN_NAV_ITEM] : BASE_NAV_ITEMS,
+    [access?.isAdmin]
+  );
+
+  // Wait for access status before mounting protected pages (prevents Paywall flash)
+  if (accessLoading) {
+    return (
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-[var(--app-bg)] px-4">
+        <div className="flex flex-col items-center gap-3">
+          <span className="flex h-12 w-12 items-center justify-center rounded-[16px] bg-[var(--app-accent)] text-white shadow-[0_6px_18px_rgba(200,90,50,0.28)] animate-pulse">
+            <CakeSlice className="h-6 w-6" strokeWidth={1.9} />
+          </span>
+          <div className="text-sm font-extrabold tracking-[-0.015em] text-[var(--app-text)]">
+            Асистент кондитера
+          </div>
+          <div className="h-1.5 w-28 rounded-full skeleton-shimmer" />
+        </div>
+      </div>
+    );
+  }
+
+  // Full Paywall lock when trial/subscription expired (admins never locked)
+  if (access && !access.hasAccess && !access.isAdmin) {
+    return <PaywallScreen />;
+  }
+
+  const showTrialBanner =
+    !accessLoading &&
+    access &&
+    !access.isAdmin &&
+    !access.isUnlimited &&
+    access.status === "trial";
 
   return (
     <div className="min-h-[100dvh] flex flex-col md:flex-row bg-[var(--app-bg)]">
@@ -82,7 +159,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 p-3 space-y-1">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const active = item.match(pathname);
             const Icon = item.icon;
             return (
@@ -176,6 +253,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Page Container */}
         <main className="flex-1 w-full max-w-4xl mx-auto px-4 pt-4 pb-safe-page md:px-8 md:py-7">
+          {/* Trial Banner */}
+          {showTrialBanner && (
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2.5 rounded-[18px] border border-[var(--app-accent)]/20 bg-gradient-to-r from-[var(--app-accent-soft)] to-[var(--app-warning-soft)] px-4 py-2.5 shadow-[0_2px_10px_rgba(200,90,50,0.06)]">
+              <div className="flex items-center gap-2 min-w-0">
+                <Clock
+                  className="h-4 w-4 shrink-0 text-[var(--app-accent)]"
+                  strokeWidth={2.2}
+                />
+                <span className="text-xs sm:text-[13px] font-bold text-[var(--app-text)] tabular-nums">
+                  Пробний період: залишилось {access.trialDaysLeft} дн.
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={paymentLoading}
+                onClick={startSubscriptionPayment}
+                className="inline-flex min-h-[36px] shrink-0 items-center gap-1.5 rounded-full bg-[var(--app-accent)] px-3.5 py-1.5 text-xs font-extrabold text-white shadow-[0_2px_8px_rgba(200,90,50,0.24)] hover:bg-[var(--app-accent-hover)] active:scale-[0.97] transition-all cursor-pointer disabled:opacity-60"
+              >
+                <span>
+                  {paymentLoading
+                    ? "Завантаження..."
+                    : `Оформити — ${SUBSCRIPTION_STARS_PRICE} ⭐`}
+                </span>
+              </button>
+            </div>
+          )}
+
           {children}
         </main>
       </div>
@@ -185,8 +289,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         aria-label="Головна навігація"
         className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--app-border)] bg-[var(--app-card)]/92 backdrop-blur-xl shadow-[var(--app-shadow-nav)] md:hidden pb-safe"
       >
-        <div className="grid grid-cols-4 px-2 pt-1.5">
-          {NAV_ITEMS.map((item) => {
+        <div
+          className={cn(
+            "grid px-1.5 pt-1.5",
+            navItems.length === 5 ? "grid-cols-5" : "grid-cols-4"
+          )}
+        >
+          {navItems.map((item) => {
             const active = item.match(pathname);
             const Icon = item.icon;
             return (
@@ -203,7 +312,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               >
                 <span
                   className={cn(
-                    "flex h-8 w-14 items-center justify-center rounded-full transition-all duration-200",
+                    "flex h-8 w-12 items-center justify-center rounded-full transition-all duration-200",
                     active ? "bg-[var(--app-accent-soft)]" : "bg-transparent"
                   )}
                 >
@@ -214,7 +323,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </span>
                 <span
                   className={cn(
-                    "text-[11px] leading-tight tracking-[-0.01em]",
+                    "text-[10.5px] leading-tight tracking-[-0.01em] truncate max-w-full px-0.5",
                     active ? "font-bold" : "font-medium"
                   )}
                 >
@@ -231,11 +340,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         title="Налаштування"
-        subtitle="Валюта розрахунків та стан синхронізації"
+        subtitle="Валюта, підписка та стан синхронізації"
       >
-        <div className="space-y-5 pb-2">
+        <div className="space-y-4 pb-2">
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--app-hint)] mb-2.5">
+            <label className="block text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--app-hint)] mb-2">
               Валюта відображення
             </label>
             <div className="grid grid-cols-1 gap-2">
@@ -248,7 +357,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     type="button"
                     onClick={() => setCurrency(code)}
                     className={cn(
-                      "flex min-h-[54px] items-center justify-between rounded-[16px] border px-4 py-3 text-left transition-all duration-150 active:scale-[0.99] cursor-pointer",
+                      "flex min-h-[52px] items-center justify-between rounded-[16px] border px-4 py-2.5 text-left transition-all duration-150 active:scale-[0.99] cursor-pointer",
                       selected
                         ? "border-[var(--app-accent)] bg-[var(--app-accent-soft)] shadow-[0_2px_10px_rgba(200,90,50,0.08)]"
                         : "border-[var(--app-border)] bg-[var(--app-card)] hover:bg-[var(--app-subtle)]"
@@ -285,7 +394,80 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          <div className="rounded-[18px] border border-[var(--app-border)] bg-[var(--app-subtle)]/80 p-4 space-y-2.5">
+          {/* Subscription Status Block */}
+          {access && (
+            <div className="rounded-[18px] border border-[var(--app-border)] bg-[var(--app-bg)] p-4 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-[var(--app-text)]">
+                  <Crown
+                    className="h-4 w-4 text-[var(--app-accent)]"
+                    strokeWidth={2}
+                  />
+                  <span>Доступ і підписка</span>
+                </div>
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10.5px] font-bold",
+                    access.status === "admin" ||
+                      access.status === "unlimited" ||
+                      access.status === "active"
+                      ? "bg-[var(--app-success-soft)] text-[var(--app-success)]"
+                      : access.status === "trial"
+                      ? "bg-[var(--app-warning-soft)] text-[var(--app-warning)]"
+                      : "bg-[var(--app-danger-soft)] text-[var(--app-danger)]"
+                  )}
+                >
+                  {access.status === "admin"
+                    ? "Адміністратор"
+                    : access.status === "unlimited"
+                    ? "Безліміт"
+                    : access.status === "active"
+                    ? "Активна"
+                    : access.status === "trial"
+                    ? `Тріал (${access.trialDaysLeft} дн.)`
+                    : "Закінчилась"}
+                </span>
+              </div>
+
+              <p className="text-xs text-[var(--app-hint)] leading-relaxed tabular-nums">
+                {access.status === "admin"
+                  ? "У вас повний адміністративний доступ без обмежень."
+                  : access.status === "unlimited"
+                  ? "У вас активовано безстроковий доступ до застосунку."
+                  : access.status === "active"
+                  ? `Оплачена підписка діє до ${formatDateUk(
+                      access.subscriptionEndsAt
+                    )}.`
+                  : access.status === "trial"
+                  ? `Пробний період діє до ${formatDateUk(
+                      access.trialEndsAt
+                    )}. Ви можете оформити підписку заздалегідь.`
+                  : "Пробний період завершився. Оформіть підписку, щоб продовжити роботу."}
+              </p>
+
+              {!access.isAdmin && !access.isUnlimited && (
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={paymentLoading}
+                  onClick={() => {
+                    setSettingsOpen(false);
+                    startSubscriptionPayment();
+                  }}
+                  className="w-full"
+                >
+                  {paymentLoading
+                    ? "Відкриваємо оплату..."
+                    : access.status === "active"
+                    ? `Продовжити на 30 днів — ${SUBSCRIPTION_STARS_PRICE} ⭐`
+                    : `Оплатити підписку — ${SUBSCRIPTION_STARS_PRICE} ⭐ (30 днів)`}
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Profile & Isolation Info */}
+          <div className="rounded-[18px] border border-[var(--app-border)] bg-[var(--app-subtle)]/80 p-4 space-y-2">
             <div className="flex items-center gap-2 text-xs font-bold text-[var(--app-text)]">
               <UserCheck
                 className="h-4 w-4 text-[var(--app-accent)]"
@@ -308,12 +490,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <p className="text-[11.5px] text-[var(--app-hint)] leading-relaxed">
               {isTelegram
-                ? "Усі ваші рецепти, інгредієнти та плани закупівель прив'язані до вашого Telegram-акаунту й невидимі для інших користувачів."
-                : "Ви працюєте в ізольованому гостьовому профілі цього браузера. У Telegram Mini App дані автоматично прив'яжуться до вашого акаунту."}
+                ? "Усі ваші рецепти, інгредієнти та плани закупівель прив'язані до вашого Telegram-акаунту."
+                : "Ви працюєте в ізольованому гостьовому профілі цього браузера."}
             </p>
-            {userId && (
+            {(access?.telegramId || userId) && (
               <div className="text-[10.5px] font-mono text-[var(--app-hint)]/80 truncate">
-                ID: {userId}
+                ID: {access?.telegramId || userId}
               </div>
             )}
           </div>
@@ -344,13 +526,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {storageMode === "neon" ? "Neon Cloud" : "Локально"}
               </span>
             </div>
-            <p className="text-xs text-[var(--app-hint)] leading-relaxed">
-              {storageMode === "neon"
-                ? "Підключено хмарну базу Neon PostgreSQL. Ваші рецепти та продукти автоматично синхронізуються між телефоном і комп'ютером."
-                : "Локальний режим зберігання (змінну DATABASE_URL не задано). Підключіть Neon PostgreSQL для синхронізації між пристроями."}
-            </p>
             {isTelegram && (
-              <div className="inline-flex items-center gap-1.5 pt-0.5 text-xs font-semibold text-[var(--app-success)]">
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--app-success)]">
                 <Sparkles className="h-3.5 w-3.5" />
                 <span>Працює всередині Telegram Mini App</span>
               </div>

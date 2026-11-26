@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { resolveRequestUserId } from "@/lib/auth";
+import { requireActiveAccess } from "@/lib/users";
 import { createIngredient, listIngredients } from "@/lib/store";
 
 const createIngredientSchema = z.object({
@@ -16,10 +16,8 @@ const createIngredientSchema = z.object({
 
 export async function GET(request: Request) {
   try {
-    const auth = resolveRequestUserId(request);
-    if (!auth.ok) {
-      return NextResponse.json({ error: auth.error }, { status: auth.status });
-    }
+    const auth = await requireActiveAccess(request);
+    if (!auth.ok) return auth.response;
     const items = await listIngredients(auth.userId);
     return NextResponse.json(items);
   } catch (error) {
@@ -33,10 +31,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const auth = resolveRequestUserId(request);
-    if (!auth.ok) {
-      return NextResponse.json({ error: auth.error }, { status: auth.status });
-    }
+    const auth = await requireActiveAccess(request);
+    if (!auth.ok) return auth.response;
     const body = await request.json();
     const parsed = createIngredientSchema.safeParse(body);
     if (!parsed.success) {

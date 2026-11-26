@@ -1,10 +1,14 @@
 "use client";
 
-import { getClientUserId, getTelegramInitData } from "@/lib/telegram";
+import {
+  getClientUserId,
+  getTelegramInitData,
+  getTelegramUser,
+} from "@/lib/telegram";
 
 /**
  * Wrapper around fetch() that automatically attaches the active Telegram user ID
- * (or persisted browser guest ID) and Telegram WebApp initData for server validation.
+ * (or persisted browser guest ID), Telegram WebApp initData, and basic profile info.
  */
 export function apiFetch(
   input: RequestInfo | URL,
@@ -16,6 +20,14 @@ export function apiFetch(
   const initData = getTelegramInitData();
   if (initData) {
     headers.set("x-telegram-init-data", initData);
+  }
+
+  const tgUser = getTelegramUser();
+  if (tgUser?.username) {
+    headers.set("x-telegram-username", encodeURIComponent(tgUser.username));
+  }
+  if (tgUser?.first_name) {
+    headers.set("x-telegram-first-name", encodeURIComponent(tgUser.first_name));
   }
 
   return fetch(input, {

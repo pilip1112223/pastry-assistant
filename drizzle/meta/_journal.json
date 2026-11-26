@@ -15,6 +15,13 @@
       "when": 1764170000000,
       "tag": "0001_user_isolation_and_units",
       "breakpoints": false
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764180000000,
+      "tag": "0002_users_and_payments",
+      "breakpoints": false
     }
   ]
 }
