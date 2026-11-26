@@ -21,25 +21,25 @@ export async function PATCH(
     const { id } = await context.params;
     const numericId = Number(id);
     if (!Number.isInteger(numericId) || numericId <= 0) {
-      return NextResponse.json({ error: "Неверный ID" }, { status: 400 });
+      return NextResponse.json({ error: "Невірний ID" }, { status: 400 });
     }
     const body = await request.json();
     const parsed = updatePlanSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Некорректные данные" },
+        { error: parsed.error.issues[0]?.message ?? "Некоректні дані" },
         { status: 400 }
       );
     }
     const updated = await updateProcurementPlan(numericId, parsed.data);
     if (!updated) {
-      return NextResponse.json({ error: "План закупки не найден" }, { status: 404 });
+      return NextResponse.json({ error: "План закупівлі не знайдено" }, { status: 404 });
     }
     return NextResponse.json(updated);
   } catch (error) {
     console.error("PATCH /api/procurement/[id] error:", error);
     return NextResponse.json(
-      { error: "Не удалось обновить план закупки" },
+      { error: "Не вдалося оновити план закупівлі" },
       { status: 500 }
     );
   }
@@ -53,17 +53,17 @@ export async function DELETE(
     const { id } = await context.params;
     const numericId = Number(id);
     if (!Number.isInteger(numericId) || numericId <= 0) {
-      return NextResponse.json({ error: "Неверный ID" }, { status: 400 });
+      return NextResponse.json({ error: "Невірний ID" }, { status: 400 });
     }
     const deleted = await deleteProcurementPlan(numericId);
     if (!deleted) {
-      return NextResponse.json({ error: "План закупки не найден" }, { status: 404 });
+      return NextResponse.json({ error: "План закупівлі не знайдено" }, { status: 404 });
     }
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("DELETE /api/procurement/[id] error:", error);
     return NextResponse.json(
-      { error: "Не удалось удалить план закупки" },
+      { error: "Не вдалося видалити план закупівлі" },
       { status: 500 }
     );
   }

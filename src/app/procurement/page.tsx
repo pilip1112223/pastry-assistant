@@ -43,7 +43,7 @@ export default function ProcurementPage() {
   const [loading, setLoading] = useState(true);
 
   const [activePlanId, setActivePlanId] = useState<number | null>(null);
-  const [planName, setPlanName] = useState("Список закупки");
+  const [planName, setPlanName] = useState("Список закупівлі");
   const [items, setItems] = useState<ProcurementPlanItem[]>([]);
   const [checkedIds, setCheckedIds] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
@@ -77,7 +77,7 @@ export default function ProcurementPage() {
         setItems(latest.itemsJson ?? []);
       }
     } catch {
-      showToast("Не удалось загрузить данные закупок", "error");
+      showToast("Не вдалося завантажити дані закупівель", "error");
     } finally {
       setLoading(false);
     }
@@ -181,7 +181,7 @@ export default function ProcurementPage() {
     setSaving(true);
     try {
       const payload = {
-        name: planName.trim() || "Список закупки",
+        name: planName.trim() || "Список закупівлі",
         itemsJson: items,
       };
       const url = activePlanId
@@ -205,10 +205,10 @@ export default function ProcurementPage() {
           ? prev.map((p) => (p.id === data.id ? data : p))
           : [data, ...prev];
       });
-      showToast("План закупки сохранён", "success");
+      showToast("План закупівлі збережено", "success");
     } catch {
       hapticNotification("error");
-      showToast("Не удалось сохранить закупку", "error");
+      showToast("Не вдалося зберегти закупівлю", "error");
     } finally {
       setSaving(false);
     }
@@ -217,7 +217,7 @@ export default function ProcurementPage() {
   function handleNewPlan() {
     hapticImpact("light");
     setActivePlanId(null);
-    setPlanName("Новая закупка");
+    setPlanName("Нова закупівля");
     setItems([]);
     setCheckedIds([]);
   }
@@ -225,7 +225,7 @@ export default function ProcurementPage() {
   async function handleDeletePlan() {
     if (!activePlanId) return;
     hapticImpact("medium");
-    if (!window.confirm(`Удалить план «${planName}»?`)) return;
+    if (!window.confirm(`Видалити план «${planName}»?`)) return;
     try {
       const res = await fetch(`/api/procurement/${activePlanId}`, {
         method: "DELETE",
@@ -240,14 +240,14 @@ export default function ProcurementPage() {
       } else {
         handleNewPlan();
       }
-      showToast("План удалён", "success");
+      showToast("План видалено", "success");
     } catch {
-      showToast("Не удалось удалить план", "error");
+      showToast("Не вдалося видалити план", "error");
     }
   }
 
   function buildShareText(): string {
-    const header = `🛒 ${planName || "Список закупки"}`;
+    const header = `🛒 ${planName || "Список закупівлі"}`;
     const cakesLines = items
       .map((item) => {
         const r = recipeMap.get(item.recipe_id);
@@ -274,9 +274,9 @@ export default function ProcurementPage() {
 
     return [
       header,
-      cakesLines ? `\nЗаказы:\n${cakesLines}` : "",
-      `\nНужно купить:\n${productLines}`,
-      `\nОриентировочный бюджет: ${formatMoney(summary.totalBudget, currency)}`,
+      cakesLines ? `\nЗамовлення:\n${cakesLines}` : "",
+      `\nПотрібно купити:\n${productLines}`,
+      `\nОрієнтовний бюджет: ${formatMoney(summary.totalBudget, currency)}`,
     ]
       .filter(Boolean)
       .join("\n");
@@ -288,9 +288,9 @@ export default function ProcurementPage() {
     try {
       await navigator.clipboard.writeText(text);
       hapticNotification("success");
-      showToast("Список скопирован в буфер", "success");
+      showToast("Список скопійовано в буфер", "success");
     } catch {
-      showToast("Не удалось скопировать текст", "error");
+      showToast("Не вдалося скопіювати текст", "error");
     }
   }
 
@@ -308,9 +308,9 @@ export default function ProcurementPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Закупка</h1>
+          <h1 className="text-xl font-bold tracking-tight">Закупівля</h1>
           <p className="text-xs text-[var(--app-hint)]">
-            Общий список продуктов под выбранные заказы
+            Загальний список продуктів під обрані замовлення
           </p>
         </div>
         {recipes.length > 0 && (
@@ -318,7 +318,7 @@ export default function ProcurementPage() {
             {plans.length > 0 && (
               <Button variant="outline" size="sm" onClick={handleNewPlan}>
                 <Plus className="h-3.5 w-3.5" />
-                <span>Новый</span>
+                <span>Новий</span>
               </Button>
             )}
             <Button
@@ -327,7 +327,7 @@ export default function ProcurementPage() {
               disabled={saving || items.length === 0}
             >
               <Save className="h-3.5 w-3.5" />
-              <span>{saving ? "..." : "Сохранить"}</span>
+              <span>{saving ? "..." : "Зберегти"}</span>
             </Button>
           </div>
         )}
@@ -343,15 +343,15 @@ export default function ProcurementPage() {
           <div className="mx-auto mb-3.5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--app-accent-soft)] text-[var(--app-accent)]">
             <ShoppingBasket className="h-7 w-7" />
           </div>
-          <h2 className="text-base font-bold">Сначала добавьте рецепты</h2>
+          <h2 className="text-base font-bold">Спочатку додайте рецепти</h2>
           <p className="mx-auto mt-1.5 max-w-xs text-xs text-[var(--app-hint)] leading-relaxed">
-            Планировщик закупок собирает продукты из ваших сохранённых техкарт и
-            пересчитывает их под выбранные диаметры.
+            Планувальник закупівель збирає продукти з ваших збережених техкарт і
+            перераховує їх під обрані діаметри.
           </p>
           <Link href="/recipes/new" className="inline-block mt-5">
             <Button>
               <Plus className="h-4 w-4" />
-              <span>Создать первый торт</span>
+              <span>Створити перший торт</span>
             </Button>
           </Link>
         </Card>
@@ -391,7 +391,7 @@ export default function ProcurementPage() {
               <Input
                 value={planName}
                 onChange={(e) => setPlanName(e.target.value)}
-                placeholder="Название закупки (напр. На субботу)"
+                placeholder="Назва закупівлі (напр. На суботу)"
                 className="font-semibold"
               />
               {activePlanId && (
@@ -400,7 +400,7 @@ export default function ProcurementPage() {
                   variant="destructive"
                   size="icon"
                   onClick={handleDeletePlan}
-                  aria-label="Удалить план"
+                  aria-label="Видалити план"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -410,7 +410,7 @@ export default function ProcurementPage() {
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
               <div className="sm:col-span-6">
                 <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                  Торт из базы
+                  Торт із бази
                 </label>
                 <select
                   value={selectedRecipeId}
@@ -432,7 +432,7 @@ export default function ProcurementPage() {
               <div className="grid grid-cols-2 gap-2.5 sm:col-span-6">
                 <div>
                   <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                    Диаметр
+                    Діаметр
                   </label>
                   <select
                     value={selectedDiameter}
@@ -449,7 +449,7 @@ export default function ProcurementPage() {
 
                 <div>
                   <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                    Кол-во (шт)
+                    Кількість (шт)
                   </label>
                   <Input
                     type="number"
@@ -472,14 +472,14 @@ export default function ProcurementPage() {
               onClick={handleAddCakeToPlan}
             >
               <Plus className="h-4 w-4" />
-              <span>Добавить в список закупки</span>
+              <span>Додати до списку закупівлі</span>
             </Button>
 
             {/* Selected Cakes List */}
             {items.length > 0 && (
               <div className="space-y-2 border-t border-[var(--app-border)] pt-3">
                 <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--app-hint)]">
-                  Выбранные торты ({summary.totalCakesCount} шт)
+                  Обрані торти ({summary.totalCakesCount} шт)
                 </div>
                 {items.map((item, idx) => {
                   const rec = recipeMap.get(item.recipe_id);
@@ -494,7 +494,7 @@ export default function ProcurementPage() {
                           {rec.name}
                         </div>
                         <div className="text-xs text-[var(--app-hint)]">
-                          Диаметр {item.diameter} см
+                          Діаметр {item.diameter} см
                         </div>
                       </div>
 
@@ -502,7 +502,7 @@ export default function ProcurementPage() {
                         <button
                           type="button"
                           onClick={() => updateItemQuantity(idx, -1)}
-                          aria-label="Уменьшить"
+                          aria-label="Зменшити"
                           className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--app-card)] border border-[var(--app-border)] cursor-pointer active:scale-95"
                         >
                           <Minus className="h-3.5 w-3.5" />
@@ -513,7 +513,7 @@ export default function ProcurementPage() {
                         <button
                           type="button"
                           onClick={() => updateItemQuantity(idx, 1)}
-                          aria-label="Увеличить"
+                          aria-label="Збільшити"
                           className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--app-card)] border border-[var(--app-border)] cursor-pointer active:scale-95"
                         >
                           <Plus className="h-3.5 w-3.5" />
@@ -534,12 +534,12 @@ export default function ProcurementPage() {
                   <div>
                     <h2 className="text-base font-bold">Список покупок</h2>
                     <p className="text-xs text-[var(--app-hint)]">
-                      Куплено {boughtCount} из {summary.shoppingList.length}
+                      Куплено {boughtCount} із {summary.shoppingList.length}
                     </p>
                   </div>
                   <div className="text-right">
                     <div className="text-[11px] text-[var(--app-hint)]">
-                      Сумма закупки
+                      Сума закупівлі
                     </div>
                     <div className="text-lg font-bold tabular-nums text-[var(--app-accent)]">
                       {formatMoney(summary.totalBudget, currency)}
@@ -568,7 +568,7 @@ export default function ProcurementPage() {
                     className="h-10"
                   >
                     <Send className="h-3.5 w-3.5" />
-                    <span>В Telegram</span>
+                    <span>У Telegram</span>
                   </Button>
                   <Button
                     type="button"
@@ -578,7 +578,7 @@ export default function ProcurementPage() {
                     className="h-10"
                   >
                     <Copy className="h-3.5 w-3.5" />
-                    <span>Скопировать</span>
+                    <span>Скопіювати</span>
                   </Button>
                 </div>
               </div>
@@ -633,7 +633,7 @@ export default function ProcurementPage() {
             </Card>
           ) : (
             <Card className="p-6 text-center text-xs text-[var(--app-hint)]">
-              Выберите один или несколько тортов выше, чтобы сформировать общий
+              Оберіть один або кілька тортів вище, щоб сформувати загальний
               список покупок.
             </Card>
           )}

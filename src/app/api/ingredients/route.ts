@@ -3,8 +3,8 @@ import { z } from "zod";
 import { createIngredient, listIngredients } from "@/lib/store";
 
 const createIngredientSchema = z.object({
-  name: z.string().trim().min(1, "Укажите название продукта").max(200),
-  pricePerKg: z.coerce.number().min(0, "Цена не может быть отрицательной"),
+  name: z.string().trim().min(1, "Вкажіть назву продукту").max(200),
+  pricePerKg: z.coerce.number().min(0, "Ціна не може бути від'ємною"),
   calories100g: z.coerce.number().min(0).optional().default(0),
   protein100g: z.coerce.number().min(0).optional().default(0),
   fat100g: z.coerce.number().min(0).optional().default(0),
@@ -18,7 +18,7 @@ export async function GET() {
   } catch (error) {
     console.error("GET /api/ingredients error:", error);
     return NextResponse.json(
-      { error: "Не удалось загрузить ингредиенты" },
+      { error: "Не вдалося завантажити інгредієнти" },
       { status: 500 }
     );
   }
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const parsed = createIngredientSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Некорректные данные" },
+        { error: parsed.error.issues[0]?.message ?? "Некоректні дані" },
         { status: 400 }
       );
     }
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("POST /api/ingredients error:", error);
     return NextResponse.json(
-      { error: "Не удалось создать продукт" },
+      { error: "Не вдалося створити продукт" },
       { status: 500 }
     );
   }

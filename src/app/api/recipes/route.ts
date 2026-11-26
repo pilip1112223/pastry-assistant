@@ -3,7 +3,7 @@ import { z } from "zod";
 import { createRecipe, listRecipes } from "@/lib/store";
 
 const recipeSchema = z.object({
-  name: z.string().trim().min(1, "Укажите название торта").max(200),
+  name: z.string().trim().min(1, "Вкажіть назву торта").max(200),
   baseDiameter: z.coerce.number().int().min(4).max(100).default(16),
   baseHeight: z.coerce.number().int().min(1).max(60).default(10),
   defaultMarkupPercent: z.coerce.number().min(0).max(10000).default(100),
@@ -34,7 +34,7 @@ export async function GET() {
   } catch (error) {
     console.error("GET /api/recipes error:", error);
     return NextResponse.json(
-      { error: "Не удалось загрузить рецепты" },
+      { error: "Не вдалося завантажити рецепти" },
       { status: 500 }
     );
   }
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     const parsed = recipeSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Некорректные данные" },
+        { error: parsed.error.issues[0]?.message ?? "Некоректні дані" },
         { status: 400 }
       );
     }
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("POST /api/recipes error:", error);
     return NextResponse.json(
-      { error: "Не удалось создать рецепт" },
+      { error: "Не вдалося створити рецепт" },
       { status: 500 }
     );
   }

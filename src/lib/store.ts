@@ -138,7 +138,7 @@ export async function listIngredients(): Promise<Ingredient[]> {
     const data = readLocalDb();
     return data.ingredients
       .slice()
-      .sort((a, b) => a.name.localeCompare(b.name, "ru"));
+      .sort((a, b) => a.name.localeCompare(b.name, "uk"));
   }
 
   const db = getDb();
@@ -414,7 +414,7 @@ export async function createRecipe(
         return {
           id: compId,
           recipeId,
-          name: comp.name.trim() || `Слой ${idx + 1}`,
+          name: comp.name.trim() || `Шар ${idx + 1}`,
           sortOrder: comp.sortOrder ?? idx,
           ingredients: (comp.ingredients ?? []).map((ci) => ({
             id: data.nextComponentIngredientId++,
@@ -450,7 +450,7 @@ export async function createRecipe(
       .insert(recipeComponents)
       .values({
         recipeId: createdRecipe.id,
-        name: comp.name.trim() || `Слой ${idx + 1}`,
+        name: comp.name.trim() || `Шар ${idx + 1}`,
         sortOrder: comp.sortOrder ?? idx,
       })
       .returning();
@@ -494,7 +494,7 @@ export async function updateRecipe(
         return {
           id: compId,
           recipeId: id,
-          name: comp.name.trim() || `Слой ${cIdx + 1}`,
+          name: comp.name.trim() || `Шар ${cIdx + 1}`,
           sortOrder: comp.sortOrder ?? cIdx,
           ingredients: (comp.ingredients ?? []).map((ci) => ({
             id: data.nextComponentIngredientId++,
@@ -535,7 +535,7 @@ export async function updateRecipe(
       .insert(recipeComponents)
       .values({
         recipeId: id,
-        name: comp.name.trim() || `Слой ${idx + 1}`,
+        name: comp.name.trim() || `Шар ${idx + 1}`,
         sortOrder: comp.sortOrder ?? idx,
       })
       .returning();
@@ -611,7 +611,7 @@ export async function createProcurementPlan(input: {
     const data = readLocalDb();
     const plan: ProcurementPlan = {
       id: data.nextPlanId++,
-      name: input.name.trim() || "Закупка",
+      name: input.name.trim() || "Закупівля",
       itemsJson: input.itemsJson ?? [],
       updatedAt: new Date().toISOString(),
     };
@@ -624,7 +624,7 @@ export async function createProcurementPlan(input: {
   const [created] = await db
     .insert(procurementPlans)
     .values({
-      name: input.name.trim() || "Закупка",
+      name: input.name.trim() || "Закупівля",
       itemsJson: input.itemsJson ?? [],
       updatedAt: new Date(),
     })
@@ -649,7 +649,7 @@ export async function updateProcurementPlan(
     const data = readLocalDb();
     const plan = data.procurementPlans.find((p) => p.id === id);
     if (!plan) return null;
-    if (input.name !== undefined) plan.name = input.name.trim() || "Закупка";
+    if (input.name !== undefined) plan.name = input.name.trim() || "Закупівля";
     if (input.itemsJson !== undefined) plan.itemsJson = input.itemsJson;
     plan.updatedAt = new Date().toISOString();
     writeLocalDb(data);
@@ -661,7 +661,7 @@ export async function updateProcurementPlan(
     .update(procurementPlans)
     .set({
       ...(input.name !== undefined
-        ? { name: input.name.trim() || "Закупка" }
+        ? { name: input.name.trim() || "Закупівля" }
         : {}),
       ...(input.itemsJson !== undefined ? { itemsJson: input.itemsJson } : {}),
       updatedAt: new Date(),

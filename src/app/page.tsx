@@ -24,7 +24,7 @@ export default function RecipesListPage() {
       const data = (await res.json()) as RecipeWithDetails[];
       setRecipes(data);
     } catch {
-      showToast("Не удалось загрузить рецепты", "error");
+      showToast("Не вдалося завантажити рецепти", "error");
     } finally {
       setLoading(false);
     }
@@ -45,17 +45,17 @@ export default function RecipesListPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Мои торты</h1>
+          <h1 className="text-xl font-bold tracking-tight">Мої торти</h1>
           <p className="text-xs text-[var(--app-hint)]">
             {recipes.length > 0
-              ? `Сохранено техкарт: ${recipes.length}`
-              : "Техкарты и расчёт себестоимости"}
+              ? `Збережено техкарт: ${recipes.length}`
+              : "Техкарти та розрахунок собівартості"}
           </p>
         </div>
         <Link href="/recipes/new" onClick={() => hapticImpact("light")}>
           <Button size="sm" className="h-10 px-3.5">
             <Plus className="h-4 w-4" />
-            <span>Новый торт</span>
+            <span>Новий торт</span>
           </Button>
         </Link>
       </div>
@@ -67,7 +67,7 @@ export default function RecipesListPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск по названию торта..."
+            placeholder="Пошук за назвою торта..."
             className="pl-10"
           />
         </div>
@@ -89,17 +89,17 @@ export default function RecipesListPage() {
             <CakeSlice className="h-7 w-7" />
           </div>
           <h2 className="text-base font-bold">
-            Пока нет рецептов — создайте первый торт
+            Поки немає рецептів — створіть перший торт
           </h2>
           <p className="mx-auto mt-1.5 max-w-xs text-xs text-[var(--app-hint)] leading-relaxed">
-            Соберите техкарту по слоям (бисквит, крем, начинка), а приложение
-            мгновенно пересчитает себестоимость и граммовки под любой диаметр.
+            Зберіть техкарту по шарах (бісквіт, крем, начинка), а застосунок
+            миттєво перерахує собівартість і грамування під будь-який діаметр.
           </p>
           <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-2.5">
             <Link href="/recipes/new" onClick={() => hapticImpact("light")}>
               <Button>
                 <Plus className="h-4 w-4" />
-                <span>Новый торт</span>
+                <span>Новий торт</span>
               </Button>
             </Link>
             <Link href="/ingredients" onClick={() => hapticImpact("light")}>
@@ -109,7 +109,7 @@ export default function RecipesListPage() {
         </Card>
       ) : filtered.length === 0 ? (
         <Card className="p-6 text-center text-sm text-[var(--app-hint)]">
-          По запросу «{search}» рецепты не найдены
+          За запитом «{search}» рецептів не знайдено
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -137,12 +137,15 @@ export default function RecipesListPage() {
                         </span>
                         <span className="rounded-md bg-[var(--app-subtle)] px-2 py-0.5">
                           {recipe.components.length}{" "}
-                          {recipe.components.length === 1
-                            ? "слой"
-                            : recipe.components.length >= 2 &&
-                              recipe.components.length <= 4
-                            ? "слоя"
-                            : "слоёв"}
+                          {recipe.components.length % 10 === 1 &&
+                          recipe.components.length % 100 !== 11
+                            ? "шар"
+                            : recipe.components.length % 10 >= 2 &&
+                              recipe.components.length % 10 <= 4 &&
+                              (recipe.components.length % 100 < 12 ||
+                                recipe.components.length % 100 > 14)
+                            ? "шари"
+                            : "шарів"}
                         </span>
                       </div>
                     </div>
@@ -152,7 +155,7 @@ export default function RecipesListPage() {
                   <div className="mt-3.5 grid grid-cols-3 gap-2 border-t border-[var(--app-border)] pt-3">
                     <div>
                       <div className="text-[10px] uppercase tracking-wider text-[var(--app-hint)]">
-                        Себест.
+                        Собіварт.
                       </div>
                       <div className="mt-0.5 text-sm font-bold tabular-nums">
                         {formatMoney(calc.totalCost, currency)}
@@ -160,7 +163,7 @@ export default function RecipesListPage() {
                     </div>
                     <div>
                       <div className="text-[10px] uppercase tracking-wider text-[var(--app-hint)]">
-                        Продажа
+                        Продаж
                       </div>
                       <div className="mt-0.5 text-sm font-bold tabular-nums text-[var(--app-accent)]">
                         {formatMoney(calc.sellingPrice, currency)}
@@ -168,7 +171,7 @@ export default function RecipesListPage() {
                     </div>
                     <div>
                       <div className="text-[10px] uppercase tracking-wider text-[var(--app-hint)]">
-                        Прибыль
+                        Прибуток
                       </div>
                       <div className="mt-0.5 text-sm font-bold tabular-nums text-[var(--app-success)]">
                         {formatMoney(calc.netProfit, currency)}

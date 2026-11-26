@@ -21,28 +21,28 @@ import { CURRENCIES, type CurrencyCode } from "@/types/pastry";
 const NAV_ITEMS = [
   {
     href: "/",
-    label: "Мои торты",
-    shortLabel: "Торты",
+    label: "Мої торти",
+    shortLabel: "Торти",
     icon: CakeSlice,
     match: (path: string) => path === "/" || path.startsWith("/recipes"),
   },
   {
     href: "/ingredients",
-    label: "Склад и цены",
+    label: "Склад і ціни",
     shortLabel: "Склад",
     icon: Package,
     match: (path: string) => path.startsWith("/ingredients"),
   },
   {
     href: "/procurement",
-    label: "Закупка",
-    shortLabel: "Закупка",
+    label: "Закупівля",
+    shortLabel: "Закупівля",
     icon: ShoppingBasket,
     match: (path: string) => path.startsWith("/procurement"),
   },
   {
     href: "/calculators",
-    label: "Калькуляторы",
+    label: "Калькулятори",
     shortLabel: "Калькулятор",
     icon: Calculator,
     match: (path: string) => path.startsWith("/calculators"),
@@ -64,10 +64,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="min-w-0">
             <div className="text-sm font-bold leading-tight truncate">
-              Ассистент кондитера
+              Асистент кондитера
             </div>
             <div className="text-xs text-[var(--app-hint)]">
-              Техкарты и расчёты
+              Техкарти та розрахунки
             </div>
           </div>
         </div>
@@ -106,7 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             <span className="flex items-center gap-2.5">
               <Settings className="h-4 w-4 text-[var(--app-hint)]" />
-              Настройки
+              Налаштування
             </span>
             <span className="rounded-lg bg-[var(--app-subtle)] px-2 py-0.5 text-xs font-semibold text-[var(--app-hint)]">
               {CURRENCIES[currency].symbol}
@@ -128,7 +128,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <CakeSlice className="h-4 w-4" />
             </span>
             <span className="text-sm font-bold truncate">
-              Ассистент кондитера
+              Асистент кондитера
             </span>
           </Link>
 
@@ -138,7 +138,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               hapticImpact("light");
               setSettingsOpen(true);
             }}
-            aria-label="Настройки"
+            aria-label="Налаштування"
             className="flex items-center gap-1.5 rounded-xl bg-[var(--app-subtle)] px-2.5 py-1.5 text-xs font-semibold text-[var(--app-text)] cursor-pointer active:scale-95 transition-transform"
           >
             <span>{CURRENCIES[currency].symbol}</span>
@@ -191,13 +191,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Modal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
-        title="Настройки"
-        subtitle="Валюта расчётов и состояние подключения"
+        title="Налаштування"
+        subtitle="Валюта розрахунків та стан підключення"
       >
         <div className="space-y-5">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--app-hint)] mb-2">
-              Валюта отображения
+              Валюта відображення
             </label>
             <div className="grid grid-cols-1 gap-2">
               {(Object.keys(CURRENCIES) as CurrencyCode[]).map((code) => {
@@ -235,16 +235,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="rounded-2xl border border-[var(--app-border)] bg-[var(--app-subtle)] p-3.5 space-y-2">
             <div className="flex items-center gap-2 text-xs font-semibold">
               <Database className="h-4 w-4 text-[var(--app-accent)]" />
-              <span>Хранилище данных</span>
+              <span>Сховище даних</span>
             </div>
             <p className="text-xs text-[var(--app-hint)] leading-relaxed">
               {storageMode === "neon"
-                ? "Подключена база данных Neon PostgreSQL. Ваши рецепты и продукты синхронизируются между телефоном и компьютером."
-                : "Локальный режим хранения (переменная DATABASE_URL не задана). Подключите Neon PostgreSQL для синхронизации между устройствами."}
+                ? "Підключено базу даних Neon PostgreSQL. Ваші рецепти та продукти синхронізуються між телефоном і комп'ютером."
+                : "Локальний режим зберігання (змінну DATABASE_URL не задано). Підключіть Neon PostgreSQL для синхронізації між пристроями."}
             </p>
             {isTelegram && (
               <p className="text-xs font-medium text-[var(--app-success)]">
-                Открыто внутри Telegram Mini App
+                Відкрито всередині Telegram Mini App
               </p>
             )}
           </div>

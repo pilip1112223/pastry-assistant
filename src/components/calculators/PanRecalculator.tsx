@@ -21,9 +21,9 @@ interface PanRecalculatorProps {
 }
 
 const SHAPE_LABELS: Record<PanShape, string> = {
-  circle: "Круг",
+  circle: "Коло",
   square: "Квадрат",
-  rectangle: "Прямоуг.",
+  rectangle: "Прямокут.",
 };
 
 export function PanRecalculator({ recipes }: PanRecalculatorProps) {
@@ -91,7 +91,7 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
       textToCopy = scaledText;
     } else if (selectedRecipe) {
       textToCopy = [
-        `${selectedRecipe.name} (коэффициент ×${factor.toFixed(2)})`,
+        `${selectedRecipe.name} (коефіцієнт ×${factor.toFixed(2)})`,
         ...selectedRecipe.components.map((c) => {
           const lines = c.ingredients
             .map((ci) => `• ${ci.ingredient.name}: ${roundGrams(ci.baseGrams * factor)} г`)
@@ -105,9 +105,9 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
     try {
       await navigator.clipboard.writeText(textToCopy);
       hapticNotification("success");
-      showToast("Пересчитанный рецепт скопирован", "success");
+      showToast("Перерахований рецепт скопійовано", "success");
     } catch {
-      showToast("Не удалось скопировать", "error");
+      showToast("Не вдалося скопіювати", "error");
     }
   }
 
@@ -143,7 +143,7 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
           {pan.shape === "circle" && (
             <div>
               <label className="block text-[10px] text-[var(--app-hint)] mb-0.5">
-                Диаметр (см)
+                Діаметр (см)
               </label>
               <Input
                 type="number"
@@ -195,7 +195,7 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
               </div>
               <div>
                 <label className="block text-[10px] text-[var(--app-hint)] mb-0.5">
-                  Длина (см)
+                  Довжина (см)
                 </label>
                 <Input
                   type="number"
@@ -213,7 +213,7 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
 
           <div>
             <label className="block text-[10px] text-[var(--app-hint)] mb-0.5">
-              Высота (см)
+              Висота (см)
             </label>
             <Input
               type="number"
@@ -237,9 +237,9 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
       <Card className="p-4 space-y-3.5">
         <div className="grid grid-cols-3 gap-1 rounded-xl bg-[var(--app-subtle)] p-1">
           {[
-            { id: "pan", label: "По форме" },
-            { id: "weight", label: "По весу" },
-            { id: "multiplier", label: "Кратность" },
+            { id: "pan", label: "За формою" },
+            { id: "weight", label: "За вагою" },
+            { id: "multiplier", label: "Кратність" },
           ].map((m) => (
             <button
               key={m.id}
@@ -261,8 +261,8 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
 
         {mode === "pan" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {renderPanInputs("Исходная форма", fromPan, setFromPan)}
-            {renderPanInputs("Новая форма", toPan, setToPan)}
+            {renderPanInputs("Початкова форма", fromPan, setFromPan)}
+            {renderPanInputs("Нова форма", toPan, setToPan)}
           </div>
         )}
 
@@ -270,7 +270,7 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-                Вес по рецепту (кг)
+                Вага за рецептом (кг)
               </label>
               <Input
                 type="number"
@@ -283,7 +283,7 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
             </div>
             <div>
               <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-                Нужный вес (кг)
+                Потрібна вага (кг)
               </label>
               <Input
                 type="number"
@@ -325,7 +325,7 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
             </div>
             <div>
               <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-                Свой коэффициент
+                Свій коефіцієнт
               </label>
               <Input
                 type="number"
@@ -341,7 +341,7 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
 
         {/* Resulting Coefficient Banner */}
         <div className="flex items-center justify-between rounded-xl bg-[var(--app-accent-soft)] px-3.5 py-2.5">
-          <span className="text-xs font-semibold">Коэффициент пересчёта</span>
+          <span className="text-xs font-semibold">Коефіцієнт перерахунку</span>
           <span className="text-base font-bold tabular-nums text-[var(--app-accent)]">
             × {factor.toFixed(2)}
           </span>
@@ -364,7 +364,7 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                   : "text-[var(--app-hint)]"
               }`}
             >
-              Вручную (текст)
+              Вручну (текст)
             </button>
             <button
               type="button"
@@ -382,7 +382,7 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                   : "text-[var(--app-hint)]"
               }`}
             >
-              Из моих тортов
+              З моїх тортів
             </button>
           </div>
 
@@ -396,7 +396,7 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
             }
           >
             <Copy className="h-3.5 w-3.5" />
-            <span>Копия</span>
+            <span>Копія</span>
           </Button>
         </div>
 
@@ -404,14 +404,14 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-                Исходный рецепт
+                Початковий рецепт
               </label>
               <textarea
                 rows={7}
                 value={rawText}
                 onChange={(e) => setRawText(e.target.value)}
                 placeholder={
-                  "Вставьте граммовки построчно, например:\nМука — 250 г\nСахар — 180 г\nСливки 33% — 400 г\nЯйца — 3 шт"
+                  "Вставте грамування по рядках, наприклад:\nБорошно — 250 г\nЦукор — 180 г\nВершки 33% — 400 г\nЯйця — 3 шт"
                 }
                 className="app-input w-full rounded-xl p-3 text-sm leading-relaxed resize-none"
               />
@@ -419,15 +419,15 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
 
             <div>
               <label className="block text-xs font-semibold text-[var(--app-accent)] mb-1">
-                Пересчитанный рецепт (×{factor.toFixed(2)})
+                Перерахований рецепт (×{factor.toFixed(2)})
               </label>
               <div className="min-h-[178px] whitespace-pre-wrap rounded-xl border border-[var(--app-accent)]/30 bg-[var(--app-accent-soft)]/50 p-3 text-sm leading-relaxed tabular-nums">
                 {scaledText.trim() ? (
                   scaledText
                 ) : (
                   <span className="text-[var(--app-hint)]">
-                    Результат появится здесь автоматически. Проценты жирности
-                    (33%) и температуры (°C) не изменяются.
+                    Результат з&apos;явиться тут автоматично. Відсотки жирності
+                    (33%) та температури (°C) не змінюються.
                   </span>
                 )}
               </div>

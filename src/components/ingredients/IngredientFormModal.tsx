@@ -87,7 +87,7 @@ export function IngredientFormModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
-      showToast("Введите название продукта", "error");
+      showToast("Введіть назву продукту", "error");
       return;
     }
 
@@ -115,12 +115,12 @@ export function IngredientFormModal({
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Ошибка сохранения");
+        throw new Error(data.error || "Помилка збереження");
       }
 
       hapticNotification("success");
       showToast(
-        editing ? "Продукт обновлён — техкарты пересчитаны" : "Продукт добавлен на склад",
+        editing ? "Продукт оновлено — техкарти перераховано" : "Продукт додано на склад",
         "success"
       );
       onSaved(data as Ingredient);
@@ -128,7 +128,7 @@ export function IngredientFormModal({
     } catch (err) {
       hapticNotification("error");
       showToast(
-        err instanceof Error ? err.message : "Не удалось сохранить",
+        err instanceof Error ? err.message : "Не вдалося зберегти",
         "error"
       );
     } finally {
@@ -140,22 +140,22 @@ export function IngredientFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={editing ? "Редактировать продукт" : "Новый продукт"}
+      title={editing ? "Редагувати продукт" : "Новий продукт"}
       subtitle={
         editing
-          ? "Изменение цены автоматически обновит все техкарты"
-          : "Укажите цену за упаковку или сразу за 1 кг"
+          ? "Зміна ціни автоматично оновить усі техкарти"
+          : "Вкажіть ціну за упаковку або одразу за 1 кг"
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1.5">
-            Название продукта *
+            Назва продукту *
           </label>
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Например: Масло сливочное 82,5%"
+            placeholder="Наприклад: Масло вершкове 82,5%"
             autoFocus
             required
           />
@@ -164,7 +164,7 @@ export function IngredientFormModal({
         {/* Smart Price Mode Toggle */}
         <div>
           <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1.5">
-            Способ ввода цены
+            Спосіб введення ціни
           </label>
           <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-[var(--app-subtle)] p-1">
             <button
@@ -193,7 +193,7 @@ export function IngredientFormModal({
                   : "text-[var(--app-hint)]"
               }`}
             >
-              Сразу за 1 кг
+              Одразу за 1 кг
             </button>
           </div>
         </div>
@@ -203,7 +203,7 @@ export function IngredientFormModal({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-                  Вес упаковки (г)
+                  Вага упаковки (г)
                 </label>
                 <Input
                   type="number"
@@ -217,7 +217,7 @@ export function IngredientFormModal({
               </div>
               <div>
                 <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-                  Цена упаковки ({CURRENCIES[currency].symbol})
+                  Ціна упаковки ({CURRENCIES[currency].symbol})
                 </label>
                 <Input
                   type="number"
@@ -234,7 +234,7 @@ export function IngredientFormModal({
             <div className="flex items-center justify-between rounded-xl bg-[var(--app-accent-soft)] px-3.5 py-2.5">
               <span className="flex items-center gap-2 text-xs font-medium text-[var(--app-text)]">
                 <Scale className="h-4 w-4 text-[var(--app-accent)]" />
-                Цена за 1 кг:
+                Ціна за 1 кг:
               </span>
               <span className="text-sm font-bold tabular-nums text-[var(--app-accent)]">
                 {formatMoney(computedPricePerKg, currency)} / кг
@@ -244,7 +244,7 @@ export function IngredientFormModal({
         ) : (
           <div>
             <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-              Цена за 1 кг ({CURRENCIES[currency].symbol})
+              Ціна за 1 кг ({CURRENCIES[currency].symbol})
             </label>
             <Input
               type="number"
@@ -268,7 +268,7 @@ export function IngredientFormModal({
             }}
             className="flex w-full items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-[var(--app-hint)] hover:bg-[var(--app-subtle)] cursor-pointer"
           >
-            <span>КБЖУ на 100 г (необязательно)</span>
+            <span>КБЖВ на 100 г (необов&apos;язково)</span>
             {showKbju ? (
               <ChevronUp className="h-4 w-4" />
             ) : (
@@ -280,7 +280,7 @@ export function IngredientFormModal({
             <div className="grid grid-cols-2 gap-2.5 border-t border-[var(--app-border)] p-3 bg-[var(--app-subtle)]/50">
               <div>
                 <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                  Калории (ккал)
+                  Калорії (ккал)
                 </label>
                 <Input
                   type="number"
@@ -294,7 +294,7 @@ export function IngredientFormModal({
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                  Белки (г)
+                  Білки (г)
                 </label>
                 <Input
                   type="number"
@@ -308,7 +308,7 @@ export function IngredientFormModal({
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                  Жиры (г)
+                  Жири (г)
                 </label>
                 <Input
                   type="number"
@@ -322,7 +322,7 @@ export function IngredientFormModal({
               </div>
               <div>
                 <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                  Углеводы (г)
+                  Вуглеводи (г)
                 </label>
                 <Input
                   type="number"
@@ -345,10 +345,10 @@ export function IngredientFormModal({
             onClick={onClose}
             className="flex-1"
           >
-            Отмена
+            Скасувати
           </Button>
           <Button type="submit" disabled={saving} className="flex-1">
-            {saving ? "Сохранение..." : editing ? "Сохранить" : "Добавить"}
+            {saving ? "Збереження..." : editing ? "Зберегти" : "Додати"}
           </Button>
         </div>
       </form>

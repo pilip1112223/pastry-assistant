@@ -5,9 +5,9 @@ import { AppShell } from "@/components/layout/AppShell";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Ассистент кондитера",
+  title: "Асистент кондитера",
   description:
-    "Расчёт себестоимости тортов, техкарты, пересчёт под разные формы, КБЖУ и планировщик закупок",
+    "Розрахунок собівартості тортів, техкарти, перерахунок під різні форми, КБЖВ та планувальник закупівель",
 };
 
 export const viewport: Viewport = {
@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
+    <html lang="uk">
       <head>
         <Script
           src="https://telegram.org/js/telegram-web-app.js"

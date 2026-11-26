@@ -34,7 +34,7 @@ export function formatMoney(
 ): string {
   const cfg = CURRENCIES[currency] ?? CURRENCIES.UAH;
   const safe = Number.isFinite(amount) ? amount : 0;
-  const formatted = new Intl.NumberFormat("ru-RU", {
+  const formatted = new Intl.NumberFormat("uk-UA", {
     minimumFractionDigits: safe % 1 === 0 ? 0 : 2,
     maximumFractionDigits: 2,
   }).format(roundMoney(safe));
@@ -270,7 +270,7 @@ export function calculateProcurementList(
   }
 
   const shoppingList = Array.from(map.values()).sort((a, b) =>
-    a.name.localeCompare(b.name, "ru")
+    a.name.localeCompare(b.name, "uk")
   );
   const totalBudget = shoppingList.reduce((s, i) => s + i.estimatedCost, 0);
   const totalWeightGrams = shoppingList.reduce((s, i) => s + i.totalGrams, 0);

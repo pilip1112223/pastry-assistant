@@ -27,7 +27,7 @@ export default function IngredientsPage() {
       const data = (await res.json()) as Ingredient[];
       setIngredients(data);
     } catch {
-      showToast("Не удалось загрузить склад", "error");
+      showToast("Не вдалося завантажити склад", "error");
     } finally {
       setLoading(false);
     }
@@ -59,7 +59,7 @@ export default function IngredientsPage() {
     hapticImpact("medium");
     if (
       !window.confirm(
-        `Удалить «${item.name}» со склада? Если продукт используется в техкартах, он будет убран из них.`
+        `Видалити «${item.name}» зі складу? Якщо продукт використовується в техкартах, його буде прибрано з них.`
       )
     ) {
       return;
@@ -73,10 +73,10 @@ export default function IngredientsPage() {
       if (!res.ok) throw new Error();
       hapticNotification("success");
       setIngredients((prev) => prev.filter((i) => i.id !== item.id));
-      showToast("Продукт удалён", "success");
+      showToast("Продукт видалено", "success");
     } catch {
       hapticNotification("error");
-      showToast("Не удалось удалить продукт", "error");
+      showToast("Не вдалося видалити продукт", "error");
     } finally {
       setDeletingId(null);
     }
@@ -88,7 +88,7 @@ export default function IngredientsPage() {
       const next = exists
         ? prev.map((i) => (i.id === saved.id ? saved : i))
         : [...prev, saved];
-      return next.sort((a, b) => a.name.localeCompare(b.name, "ru"));
+      return next.sort((a, b) => a.name.localeCompare(b.name, "uk"));
     });
   }
 
@@ -97,11 +97,11 @@ export default function IngredientsPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Склад и цены</h1>
+          <h1 className="text-xl font-bold tracking-tight">Склад і ціни</h1>
           <p className="text-xs text-[var(--app-hint)]">
             {ingredients.length > 0
-              ? `Продуктов в базе: ${ingredients.length}`
-              : "База продуктов для расчёта себестоимости"}
+              ? `Продуктів у базі: ${ingredients.length}`
+              : "База продуктів для розрахунку собівартості"}
           </p>
         </div>
         <Button onClick={openCreate} size="sm" className="shrink-0 h-10 px-3.5">
@@ -117,7 +117,7 @@ export default function IngredientsPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск продукта..."
+            placeholder="Пошук продукту..."
             className="pl-10"
           />
         </div>
@@ -138,19 +138,19 @@ export default function IngredientsPage() {
           <div className="mx-auto mb-3.5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--app-accent-soft)] text-[var(--app-accent)]">
             <Package className="h-7 w-7" />
           </div>
-          <h2 className="text-base font-bold">Склад пока пуст</h2>
+          <h2 className="text-base font-bold">Склад поки порожній</h2>
           <p className="mx-auto mt-1.5 max-w-xs text-xs text-[var(--app-hint)] leading-relaxed">
-            Добавьте продукты, с которыми работаете. Цену можно указать сразу за
-            1 кг или за упаковку — система пересчитает сама.
+            Додайте продукти, з якими працюєте. Ціну можна вказати одразу за
+            1 кг або за упаковку — система перерахує сама.
           </p>
           <Button onClick={openCreate} className="mt-5">
             <Plus className="h-4 w-4" />
-            <span>Добавить первый продукт</span>
+            <span>Додати перший продукт</span>
           </Button>
         </Card>
       ) : filtered.length === 0 ? (
         <Card className="p-6 text-center">
-          <p className="text-sm font-medium">По запросу «{search}» ничего не найдено</p>
+          <p className="text-sm font-medium">За запитом «{search}» нічого не знайдено</p>
           <Button
             variant="secondary"
             size="sm"
@@ -161,7 +161,7 @@ export default function IngredientsPage() {
             }}
           >
             <Plus className="h-4 w-4" />
-            <span>Добавить «{search}»</span>
+            <span>Додати «{search}»</span>
           </Button>
         </Card>
       ) : (
@@ -189,7 +189,7 @@ export default function IngredientsPage() {
                     {hasKbju && (
                       <span className="text-[11px] tabular-nums text-[var(--app-hint)]">
                         {Math.round(item.calories100g)} ккал · Б {item.protein100g} · Ж{" "}
-                        {item.fat100g} · У {item.carbs100g}
+                        {item.fat100g} · В {item.carbs100g}
                       </span>
                     )}
                   </div>
@@ -200,7 +200,7 @@ export default function IngredientsPage() {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    aria-label="Редактировать"
+                    aria-label="Редагувати"
                     onClick={() => openEdit(item)}
                   >
                     <Pencil className="h-4 w-4 text-[var(--app-hint)]" />
@@ -209,7 +209,7 @@ export default function IngredientsPage() {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    aria-label="Удалить"
+                    aria-label="Видалити"
                     disabled={deletingId === item.id}
                     onClick={() => handleDelete(item)}
                   >

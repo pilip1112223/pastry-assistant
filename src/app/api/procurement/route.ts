@@ -9,7 +9,7 @@ const planItemSchema = z.object({
 });
 
 const createPlanSchema = z.object({
-  name: z.string().trim().min(1).max(200).default("Новая закупка"),
+  name: z.string().trim().min(1).max(200).default("Нова закупівля"),
   itemsJson: z.array(planItemSchema).default([]),
 });
 
@@ -20,7 +20,7 @@ export async function GET() {
   } catch (error) {
     console.error("GET /api/procurement error:", error);
     return NextResponse.json(
-      { error: "Не удалось загрузить планы закупок" },
+      { error: "Не вдалося завантажити плани закупівель" },
       { status: 500 }
     );
   }
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     const parsed = createPlanSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Некорректные данные" },
+        { error: parsed.error.issues[0]?.message ?? "Некоректні дані" },
         { status: 400 }
       );
     }
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("POST /api/procurement error:", error);
     return NextResponse.json(
-      { error: "Не удалось создать закупку" },
+      { error: "Не вдалося створити закупівлю" },
       { status: 500 }
     );
   }

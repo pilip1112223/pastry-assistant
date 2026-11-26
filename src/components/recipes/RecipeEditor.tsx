@@ -50,12 +50,12 @@ interface DraftComponent {
 }
 
 const COMPONENT_PRESETS = [
-  "Бисквит",
+  "Бісквіт",
   "Крем",
-  "Начинка / Конфи",
-  "Пропитка",
-  "Хрустящий слой",
-  "Покрытие",
+  "Начинка / Конфі",
+  "Просочення",
+  "Хрусткий шар",
+  "Покриття",
 ];
 
 function makeKey() {
@@ -84,7 +84,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
   const [portionsCount, setPortionsCount] = useState(8);
   const [finishedWeightGrams, setFinishedWeightGrams] = useState(0);
   const [components, setComponents] = useState<DraftComponent[]>([
-    { clientKey: "init-1", name: "Бисквит", ingredients: [] },
+    { clientKey: "init-1", name: "Бісквіт", ingredients: [] },
     { clientKey: "init-2", name: "Крем", ingredients: [] },
   ]);
 
@@ -122,7 +122,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
 
         if (recRes) {
           if (!recRes.ok) {
-            showToast("Рецепт не найден", "error");
+            showToast("Рецепт не знайдено", "error");
             router.push("/");
             return;
           }
@@ -146,12 +146,12 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                       baseGrams: String(ci.baseGrams),
                     })),
                   }))
-                : [{ clientKey: makeKey(), name: "Бисквит", ingredients: [] }]
+                : [{ clientKey: makeKey(), name: "Бісквіт", ingredients: [] }]
             );
           }
         }
       } catch {
-        showToast("Ошибка загрузки данных", "error");
+        showToast("Помилка завантаження даних", "error");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -171,7 +171,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
   const liveRecipe = useMemo<RecipeWithDetails>(() => {
     return {
       id: recipeId ?? 0,
-      name: name || "Новый торт",
+      name: name || "Новий торт",
       baseDiameter: baseDiameter || 16,
       baseHeight: baseHeight || 10,
       defaultMarkupPercent: markupPercent,
@@ -224,7 +224,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
       ...prev,
       {
         clientKey: makeKey(),
-        name: presetName || `Слой ${prev.length + 1}`,
+        name: presetName || `Шар ${prev.length + 1}`,
         ingredients: [],
       },
     ]);
@@ -303,7 +303,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
 
   async function handleSave() {
     if (!name.trim()) {
-      showToast("Введите название торта", "error");
+      showToast("Введіть назву торта", "error");
       setShowMetaSettings(true);
       return;
     }
@@ -318,7 +318,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
         portionsCount: portionsCount || 8,
         finishedWeightGrams: finishedWeightGrams || 0,
         components: components.map((c, idx) => ({
-          name: c.name.trim() || `Слой ${idx + 1}`,
+          name: c.name.trim() || `Шар ${idx + 1}`,
           sortOrder: idx,
           ingredients: c.ingredients.map((l) => ({
             ingredientId: l.ingredientId,
@@ -338,18 +338,18 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Ошибка сохранения");
+        throw new Error(data.error || "Помилка збереження");
       }
 
       hapticNotification("success");
-      showToast("Техкарта сохранена", "success");
+      showToast("Техкарту збережено", "success");
       if (!recipeId && data.id) {
         router.replace(`/recipes/${data.id}`);
       }
     } catch (err) {
       hapticNotification("error");
       showToast(
-        err instanceof Error ? err.message : "Не удалось сохранить",
+        err instanceof Error ? err.message : "Не вдалося зберегти",
         "error"
       );
     } finally {
@@ -360,18 +360,18 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
   async function handleDelete() {
     if (!recipeId) return;
     hapticImpact("medium");
-    if (!window.confirm(`Удалить техкарту «${name}»?`)) return;
+    if (!window.confirm(`Видалити техкарту «${name}»?`)) return;
 
     setDeleting(true);
     try {
       const res = await fetch(`/api/recipes/${recipeId}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
       hapticNotification("success");
-      showToast("Техкарта удалена", "success");
+      showToast("Техкарту видалено", "success");
       router.push("/");
     } catch {
       hapticNotification("error");
-      showToast("Не удалось удалить техкарту", "error");
+      showToast("Не вдалося видалити техкарту", "error");
       setDeleting(false);
     }
   }
@@ -402,7 +402,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
           className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-sm font-semibold text-[var(--app-hint)] hover:bg-[var(--app-subtle)] hover:text-[var(--app-text)] cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Торты</span>
+          <span>Торти</span>
         </button>
 
         <div className="flex items-center gap-2">
@@ -413,7 +413,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
               size="icon"
               disabled={deleting}
               onClick={handleDelete}
-              aria-label="Удалить рецепт"
+              aria-label="Видалити рецепт"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -426,7 +426,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
             className="h-10 px-4"
           >
             <Save className="h-4 w-4" />
-            <span>{saving ? "Сохранение..." : "Сохранить"}</span>
+            <span>{saving ? "Збереження..." : "Зберегти"}</span>
           </Button>
         </div>
       </div>
@@ -435,12 +435,12 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
       <Card className="p-4 space-y-3">
         <div>
           <label className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--app-hint)] mb-1">
-            Название торта / десерта
+            Назва торта / десерту
           </label>
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Например: Медовик классический"
+            placeholder="Наприклад: Медовик класичний"
             className="text-base font-semibold"
           />
         </div>
@@ -454,8 +454,8 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
           className="flex w-full items-center justify-between rounded-xl bg-[var(--app-subtle)] px-3 py-2 text-xs font-semibold text-[var(--app-hint)] cursor-pointer"
         >
           <span>
-            Параметры: база Ø {baseDiameter} см · высота {baseHeight} см ·{" "}
-            {portionsCount} порц. · наценка {markupPercent}%
+            Параметри: база Ø {baseDiameter} см · висота {baseHeight} см ·{" "}
+            {portionsCount} порц. · націнка {markupPercent}%
           </span>
           {showMetaSettings ? (
             <ChevronUp className="h-4 w-4 shrink-0" />
@@ -468,7 +468,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
             <div>
               <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                Базовый диаметр (см)
+                Базовий діаметр (см)
               </label>
               <Input
                 type="number"
@@ -486,7 +486,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
             </div>
             <div>
               <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                Высота (см)
+                Висота (см)
               </label>
               <Input
                 type="number"
@@ -500,7 +500,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
             </div>
             <div>
               <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                Наценка (%)
+                Націнка (%)
               </label>
               <Input
                 type="number"
@@ -515,7 +515,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
             </div>
             <div>
               <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                Порций (на базовый Ø)
+                Порцій (на базовий Ø)
               </label>
               <Input
                 type="number"
@@ -530,7 +530,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
             </div>
             <div className="col-span-2">
               <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                Вес готового торта, г (0 = автосумма ингредиентов)
+                Вага готового торта, г (0 = автосума інгредієнтів)
               </label>
               <Input
                 type="number"
@@ -554,7 +554,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
       <div className="sticky top-[52px] md:top-0 z-20 -mx-3.5 px-3.5 py-2.5 bg-[var(--app-bg)]/95 backdrop-blur-md border-y border-[var(--app-border)] md:mx-0 md:rounded-2xl md:border">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-bold">
-            Пересчёт под диаметр (см)
+            Перерахунок під діаметр (см)
           </span>
           <span className="rounded-lg bg-[var(--app-accent-soft)] px-2 py-0.5 text-xs font-bold tabular-nums text-[var(--app-accent)]">
             Ø {selectedDiameter} см · ×{coeff.toFixed(2)}
@@ -584,7 +584,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                     className={`absolute -top-1 -right-1 h-2 w-2 rounded-full ${
                       active ? "bg-[var(--app-card)]" : "bg-[var(--app-accent)]"
                     }`}
-                    title="Базовый диаметр"
+                    title="Базовий діаметр"
                   />
                 )}
               </button>
@@ -598,7 +598,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
         <div className="grid grid-cols-3 gap-2.5">
           <div className="rounded-xl bg-[var(--app-subtle)] p-3">
             <div className="text-[11px] font-medium text-[var(--app-hint)]">
-              Себестоимость
+              Собівартість
             </div>
             <div className="mt-1 text-base sm:text-lg font-bold tabular-nums">
               {formatMoney(calc.totalCost, currency)}
@@ -607,7 +607,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
 
           <div className="rounded-xl bg-[var(--app-accent-soft)] p-3">
             <div className="text-[11px] font-medium text-[var(--app-accent)]">
-              Продажа (+{markupPercent}%)
+              Продаж (+{markupPercent}%)
             </div>
             <div className="mt-1 text-base sm:text-lg font-bold tabular-nums text-[var(--app-accent)]">
               {formatMoney(calc.sellingPrice, currency)}
@@ -616,7 +616,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
 
           <div className="rounded-xl bg-[var(--app-success-soft)] p-3">
             <div className="text-[11px] font-medium text-[var(--app-success)]">
-              Прибыль
+              Прибуток
             </div>
             <div className="mt-1 text-base sm:text-lg font-bold tabular-nums text-[var(--app-success)]">
               {formatMoney(calc.netProfit, currency)}
@@ -627,7 +627,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--app-border)] pt-3 text-xs">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <span>
-              <span className="text-[var(--app-hint)]">Вес: </span>
+              <span className="text-[var(--app-hint)]">Вага: </span>
               <strong className="tabular-nums">
                 {formatWeight(calc.estimatedFinishedWeightGrams)}
               </strong>
@@ -655,7 +655,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
               className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--app-accent)] hover:underline"
             >
               <Calculator className="h-3.5 w-3.5" />
-              <span>КБЖУ</span>
+              <span>КБЖВ</span>
             </Link>
           )}
         </div>
@@ -666,7 +666,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
         <div className="flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[var(--app-hint)]">
             <Layers className="h-4 w-4" />
-            <span>Компоненты торта</span>
+            <span>Компоненти торта</span>
           </h2>
           <Button
             type="button"
@@ -675,7 +675,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
             onClick={() => addComponent()}
           >
             <Plus className="h-3.5 w-3.5" />
-            <span>Добавить слой</span>
+            <span>Додати шар</span>
           </Button>
         </div>
 
@@ -690,7 +690,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                   onChange={(e) =>
                     updateComponentName(comp.clientKey, e.target.value)
                   }
-                  placeholder="Название компонента (напр. Бисквит)"
+                  placeholder="Назва компонента (напр. Бісквіт)"
                   className="h-9 flex-1 font-bold text-sm bg-[var(--app-card)]"
                 />
                 <div className="flex items-center gap-0.5 shrink-0">
@@ -698,7 +698,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                     type="button"
                     disabled={compIndex === 0}
                     onClick={() => moveComponent(compIndex, -1)}
-                    aria-label="Выше"
+                    aria-label="Вище"
                     className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--app-hint)] hover:bg-[var(--app-card)] disabled:opacity-30 cursor-pointer"
                   >
                     <ArrowUp className="h-4 w-4" />
@@ -707,7 +707,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                     type="button"
                     disabled={compIndex === components.length - 1}
                     onClick={() => moveComponent(compIndex, 1)}
-                    aria-label="Ниже"
+                    aria-label="Нижче"
                     className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--app-hint)] hover:bg-[var(--app-card)] disabled:opacity-30 cursor-pointer"
                   >
                     <ArrowDown className="h-4 w-4" />
@@ -715,7 +715,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                   <button
                     type="button"
                     onClick={() => removeComponent(comp.clientKey)}
-                    aria-label="Удалить слой"
+                    aria-label="Видалити шар"
                     className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--app-danger)] hover:bg-[var(--app-danger-soft)] cursor-pointer"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -727,7 +727,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
               <div className="divide-y divide-[var(--app-border)]">
                 {comp.ingredients.length === 0 ? (
                   <div className="px-4 py-4 text-center text-xs text-[var(--app-hint)]">
-                    В этом слое пока нет ингредиентов
+                    У цьому шарі поки немає інгредієнтів
                   </div>
                 ) : (
                   comp.ingredients.map((line) => {
@@ -791,7 +791,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                             onClick={() =>
                               removeLine(comp.clientKey, line.clientKey)
                             }
-                            aria-label="Убрать ингредиент"
+                            aria-label="Прибрати інгредієнт"
                             className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--app-hint)] hover:text-[var(--app-danger)] cursor-pointer"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -817,11 +817,11 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                   }}
                 >
                   <Plus className="h-4 w-4" />
-                  <span>Ингредиент</span>
+                  <span>Інгредієнт</span>
                 </Button>
 
                 <div className="text-xs tabular-nums text-[var(--app-hint)]">
-                  Итого слой:{" "}
+                  Разом шар:{" "}
                   <strong className="text-[var(--app-text)]">
                     {formatWeight(calculatedComp?.totalGrams ?? 0)}
                   </strong>{" "}
@@ -850,14 +850,14 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
         </div>
       </div>
 
-      {/* Consolidated Summary Table (Сводка по торту) */}
+      {/* Consolidated Summary Table (Зведення по торту) */}
       {calc.aggregated.length > 0 && (
         <Card className="overflow-hidden">
           <div className="flex items-center justify-between border-b border-[var(--app-border)] px-4 py-3">
             <div>
-              <h3 className="text-sm font-bold">Сводка по торту</h3>
+              <h3 className="text-sm font-bold">Зведення по торту</h3>
               <p className="text-[11px] text-[var(--app-hint)]">
-                Общий расход каждого продукта на Ø {selectedDiameter} см
+                Загальна витрата кожного продукту на Ø {selectedDiameter} см
               </p>
             </div>
             <span className="rounded-lg bg-[var(--app-subtle)] px-2.5 py-1 text-xs font-bold tabular-nums">
@@ -890,8 +890,8 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
       <Modal
         open={pickerCompKey !== null}
         onClose={() => setPickerCompKey(null)}
-        title="Выбрать ингредиент"
-        subtitle="Из вашего склада или создайте новый продукт сразу"
+        title="Обрати інгредієнт"
+        subtitle="З вашого складу або створіть новий продукт одразу"
       >
         <div className="space-y-3">
           <div className="relative">
@@ -899,7 +899,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
             <Input
               value={pickerSearch}
               onChange={(e) => setPickerSearch(e.target.value)}
-              placeholder="Найти продукт..."
+              placeholder="Знайти продукт..."
               className="pl-10"
               autoFocus
             />
@@ -917,19 +917,19 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
             <Plus className="h-4 w-4" />
             <span>
               {pickerSearch.trim()
-                ? `Создать «${pickerSearch.trim()}» на складе`
-                : "Создать новый продукт на складе"}
+                ? `Створити «${pickerSearch.trim()}» на складі`
+                : "Створити новий продукт на складі"}
             </span>
           </Button>
 
           {allIngredients.length === 0 ? (
             <p className="py-4 text-center text-xs text-[var(--app-hint)]">
-              На складе пока нет продуктов. Нажмите кнопку выше, чтобы добавить
-              первый продукт прямо сейчас.
+              На складі поки немає продуктів. Натисніть кнопку вище, щоб додати
+              перший продукт прямо зараз.
             </p>
           ) : pickerFiltered.length === 0 ? (
             <p className="py-4 text-center text-xs text-[var(--app-hint)]">
-              Продукт не найден — вы можете создать его кнопкой выше.
+              Продукт не знайдено — ви можете створити його кнопкою вище.
             </p>
           ) : (
             <div className="max-h-72 overflow-y-auto divide-y divide-[var(--app-border)] rounded-xl border border-[var(--app-border)]">
@@ -964,7 +964,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
         initialName={pickerSearch.trim()}
         onSaved={(created) => {
           setAllIngredients((prev) =>
-            [...prev, created].sort((a, b) => a.name.localeCompare(b.name, "ru"))
+            [...prev, created].sort((a, b) => a.name.localeCompare(b.name, "uk"))
           );
           if (pickerCompKey) {
             addIngredientToComponent(pickerCompKey, created);

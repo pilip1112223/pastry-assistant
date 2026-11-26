@@ -95,19 +95,19 @@ export function QuickCostCalculator() {
       <Card className="p-4">
         <div className="grid grid-cols-3 gap-2.5">
           <div className="rounded-xl bg-[var(--app-subtle)] p-3">
-            <div className="text-[11px] text-[var(--app-hint)]">Себестоимость</div>
+            <div className="text-[11px] text-[var(--app-hint)]">Собівартість</div>
             <div className="mt-1 text-base font-bold tabular-nums">
               {formatMoney(results.totalCost, currency)}
             </div>
           </div>
           <div className="rounded-xl bg-[var(--app-accent-soft)] p-3">
-            <div className="text-[11px] text-[var(--app-accent)]">Продажа</div>
+            <div className="text-[11px] text-[var(--app-accent)]">Продаж</div>
             <div className="mt-1 text-base font-bold tabular-nums text-[var(--app-accent)]">
               {formatMoney(results.sellingPrice, currency)}
             </div>
           </div>
           <div className="rounded-xl bg-[var(--app-success-soft)] p-3">
-            <div className="text-[11px] text-[var(--app-success)]">Прибыль</div>
+            <div className="text-[11px] text-[var(--app-success)]">Прибуток</div>
             <div className="mt-1 text-base font-bold tabular-nums text-[var(--app-success)]">
               {formatMoney(results.profit, currency)}
             </div>
@@ -116,13 +116,13 @@ export function QuickCostCalculator() {
 
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-[var(--app-border)] pt-2.5 text-xs">
           <span>
-            <span className="text-[var(--app-hint)]">Себест. 1 порции: </span>
+            <span className="text-[var(--app-hint)]">Собіварт. 1 порції: </span>
             <strong className="tabular-nums">
               {formatMoney(results.costPerPortion, currency)}
             </strong>
           </span>
           <span>
-            <span className="text-[var(--app-hint)]">Цена 1 порции: </span>
+            <span className="text-[var(--app-hint)]">Ціна 1 порції: </span>
             <strong className="tabular-nums text-[var(--app-accent)]">
               {formatMoney(results.pricePerPortion, currency)}
             </strong>
@@ -135,7 +135,7 @@ export function QuickCostCalculator() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-              Выход (порций)
+              Вихід (порцій)
             </label>
             <Input
               type="number"
@@ -147,7 +147,7 @@ export function QuickCostCalculator() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-              Наценка (%)
+              Націнка (%)
             </label>
             <Input
               type="number"
@@ -168,7 +168,7 @@ export function QuickCostCalculator() {
               <Input
                 value={row.name}
                 onChange={(e) => updateRow(row.id, "name", e.target.value)}
-                placeholder={`Ингредиент ${idx + 1} (необязательно)`}
+                placeholder={`Інгредієнт ${idx + 1} (необов'язково)`}
                 className="h-9 text-sm"
               />
               <span className="shrink-0 text-xs font-bold tabular-nums text-[var(--app-accent)] min-w-[64px] text-right">
@@ -178,7 +178,7 @@ export function QuickCostCalculator() {
                 type="button"
                 onClick={() => removeRow(row.id)}
                 disabled={rows.length === 1}
-                aria-label="Удалить строку"
+                aria-label="Видалити рядок"
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--app-hint)] hover:text-[var(--app-danger)] disabled:opacity-30 cursor-pointer"
               >
                 <Trash2 className="h-4 w-4" />
@@ -205,7 +205,7 @@ export function QuickCostCalculator() {
               </div>
               <div>
                 <label className="block text-[10px] font-medium text-[var(--app-hint)] mb-0.5">
-                  Цена ({sym})
+                  Ціна ({sym})
                 </label>
                 <Input
                   type="number"
@@ -222,7 +222,7 @@ export function QuickCostCalculator() {
               </div>
               <div>
                 <label className="block text-[10px] font-medium text-[var(--app-hint)] mb-0.5">
-                  Расход (г)
+                  Витрата (г)
                 </label>
                 <Input
                   type="number"
@@ -249,13 +249,13 @@ export function QuickCostCalculator() {
             className="flex-1"
           >
             <Plus className="h-4 w-4" />
-            <span>Добавить ингредиент</span>
+            <span>Додати інгредієнт</span>
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={resetAll}
-            aria-label="Сбросить"
+            aria-label="Скинути"
           >
             <RotateCcw className="h-4 w-4" />
           </Button>

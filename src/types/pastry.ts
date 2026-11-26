@@ -83,10 +83,10 @@ export interface CurrencyConfig {
 }
 
 export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
-  UAH: { code: "UAH", symbol: "грн", label: "Украинская гривна (грн)", position: "after" },
-  USD: { code: "USD", symbol: "$", label: "Доллар США ($)", position: "before" },
-  EUR: { code: "EUR", symbol: "€", label: "Евро (€)", position: "before" },
-  PLN: { code: "PLN", symbol: "zł", label: "Польский злотый (zł)", position: "after" },
+  UAH: { code: "UAH", symbol: "грн", label: "Українська гривня (грн)", position: "after" },
+  USD: { code: "USD", symbol: "$", label: "Долар США ($)", position: "before" },
+  EUR: { code: "EUR", symbol: "€", label: "Євро (€)", position: "before" },
+  PLN: { code: "PLN", symbol: "zł", label: "Польський злотий (zł)", position: "after" },
 };
 
 export const DIAMETERS = [10, 12, 14, 16, 18, 20, 22, 24, 26] as const;

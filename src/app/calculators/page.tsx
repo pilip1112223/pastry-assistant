@@ -46,17 +46,17 @@ function CalculatorsContent() {
   }, []);
 
   const tabs: Array<{ id: CalcTab; label: string; icon: React.ElementType }> = [
-    { id: "quick", label: "Быстрый", icon: Calculator },
-    { id: "pan", label: "Формы", icon: Ruler },
-    { id: "kbju", label: "КБЖУ", icon: Flame },
+    { id: "quick", label: "Швидкий", icon: Calculator },
+    { id: "pan", label: "Форми", icon: Ruler },
+    { id: "kbju", label: "КБЖВ", icon: Flame },
   ];
 
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold tracking-tight">Калькуляторы</h1>
+        <h1 className="text-xl font-bold tracking-tight">Калькулятори</h1>
         <p className="text-xs text-[var(--app-hint)]">
-          Быстрая себестоимость, пересчёт форм и пищевая ценность
+          Швидка собівартість, перерахунок форм та харчова цінність
         </p>
       </div>
 

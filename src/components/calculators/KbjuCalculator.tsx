@@ -179,20 +179,20 @@ export function KbjuCalculator({
     hapticImpact("light");
     const title =
       source === "recipe" && selectedRecipe
-        ? `КБЖУ — ${selectedRecipe.name} (Ø ${selectedDiameter} см)`
-        : "Пищевая ценность (КБЖУ)";
+        ? `КБЖВ — ${selectedRecipe.name} (Ø ${selectedDiameter} см)`
+        : "Харчова цінність (КБЖВ)";
     const text = [
       title,
-      `На 100 г: ${kbju.per100g.calories} ккал · Белки ${kbju.per100g.protein} г · Жиры ${kbju.per100g.fat} г · Углеводы ${kbju.per100g.carbs} г`,
-      `На порцию (${kbju.portionWeightGrams} г): ${kbju.perPortion.calories} ккал · Б ${kbju.perPortion.protein} г · Ж ${kbju.perPortion.fat} г · У ${kbju.perPortion.carbs} г`,
+      `На 100 г: ${kbju.per100g.calories} ккал · Білки ${kbju.per100g.protein} г · Жири ${kbju.per100g.fat} г · Вуглеводи ${kbju.per100g.carbs} г`,
+      `На порцію (${kbju.portionWeightGrams} г): ${kbju.perPortion.calories} ккал · Б ${kbju.perPortion.protein} г · Ж ${kbju.perPortion.fat} г · В ${kbju.perPortion.carbs} г`,
     ].join("\n");
 
     try {
       await navigator.clipboard.writeText(text);
       hapticNotification("success");
-      showToast("КБЖУ скопировано", "success");
+      showToast("КБЖВ скопійовано", "success");
     } catch {
-      showToast("Не удалось скопировать", "error");
+      showToast("Не вдалося скопіювати", "error");
     }
   }
 
@@ -203,10 +203,10 @@ export function KbjuCalculator({
         <div className="flex items-center justify-between">
           <div>
             <div className="text-xs font-bold uppercase tracking-wider text-[var(--app-hint)]">
-              Пищевая ценность
+              Харчова цінність
             </div>
             <div className="text-[11px] text-[var(--app-hint)]">
-              Готовый вес: {roundGrams(kbju.finishedWeightGrams)} г · Порция:{" "}
+              Готова вага: {roundGrams(kbju.finishedWeightGrams)} г · Порція:{" "}
               {roundGrams(kbju.portionWeightGrams)} г
             </div>
           </div>
@@ -217,7 +217,7 @@ export function KbjuCalculator({
             onClick={handleCopyKbju}
           >
             <Copy className="h-3.5 w-3.5" />
-            <span>Копия</span>
+            <span>Копія</span>
           </Button>
         </div>
 
@@ -234,19 +234,19 @@ export function KbjuCalculator({
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="rounded-lg bg-[var(--app-card)] py-1.5">
-                <div className="text-[10px] text-[var(--app-hint)]">Белки</div>
+                <div className="text-[10px] text-[var(--app-hint)]">Білки</div>
                 <div className="text-sm font-bold tabular-nums">
                   {kbju.per100g.protein} г
                 </div>
               </div>
               <div className="rounded-lg bg-[var(--app-card)] py-1.5">
-                <div className="text-[10px] text-[var(--app-hint)]">Жиры</div>
+                <div className="text-[10px] text-[var(--app-hint)]">Жири</div>
                 <div className="text-sm font-bold tabular-nums">
                   {kbju.per100g.fat} г
                 </div>
               </div>
               <div className="rounded-lg bg-[var(--app-card)] py-1.5">
-                <div className="text-[10px] text-[var(--app-hint)]">Углев.</div>
+                <div className="text-[10px] text-[var(--app-hint)]">Вугл.</div>
                 <div className="text-sm font-bold tabular-nums">
                   {kbju.per100g.carbs} г
                 </div>
@@ -258,7 +258,7 @@ export function KbjuCalculator({
           <div className="rounded-xl bg-[var(--app-subtle)] p-3.5">
             <div className="flex items-baseline justify-between mb-2">
               <span className="text-xs font-bold">
-                На 1 порцию ({roundGrams(kbju.portionWeightGrams)} г)
+                На 1 порцію ({roundGrams(kbju.portionWeightGrams)} г)
               </span>
               <span className="text-lg font-bold tabular-nums">
                 {kbju.perPortion.calories} ккал
@@ -266,19 +266,19 @@ export function KbjuCalculator({
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="rounded-lg bg-[var(--app-card)] py-1.5">
-                <div className="text-[10px] text-[var(--app-hint)]">Белки</div>
+                <div className="text-[10px] text-[var(--app-hint)]">Білки</div>
                 <div className="text-sm font-bold tabular-nums">
                   {kbju.perPortion.protein} г
                 </div>
               </div>
               <div className="rounded-lg bg-[var(--app-card)] py-1.5">
-                <div className="text-[10px] text-[var(--app-hint)]">Жиры</div>
+                <div className="text-[10px] text-[var(--app-hint)]">Жири</div>
                 <div className="text-sm font-bold tabular-nums">
                   {kbju.perPortion.fat} г
                 </div>
               </div>
               <div className="rounded-lg bg-[var(--app-card)] py-1.5">
-                <div className="text-[10px] text-[var(--app-hint)]">Углев.</div>
+                <div className="text-[10px] text-[var(--app-hint)]">Вугл.</div>
                 <div className="text-sm font-bold tabular-nums">
                   {kbju.perPortion.carbs} г
                 </div>
@@ -291,11 +291,11 @@ export function KbjuCalculator({
           <div className="flex items-start gap-2 rounded-xl bg-amber-500/10 px-3 py-2.5 text-xs text-amber-800 dark:text-amber-200">
             <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
             <div>
-              У {missingKbjuNames.length} продуктов не заполнено КБЖУ (
+              У {missingKbjuNames.length} продуктів не заповнено КБЖВ (
               {missingKbjuNames.slice(0, 3).join(", ")}
               {missingKbjuNames.length > 3 ? "…" : ""}).{" "}
               <Link href="/ingredients" className="underline font-semibold">
-                Заполнить на складе
+                Заповнити на складі
               </Link>
             </div>
           </div>
@@ -307,7 +307,7 @@ export function KbjuCalculator({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-              Вес готового изделия (г)
+              Вага готового виробу (г)
             </label>
             <Input
               type="number"
@@ -324,7 +324,7 @@ export function KbjuCalculator({
           </div>
           <div>
             <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-              Вес 1 порции (г)
+              Вага 1 порції (г)
             </label>
             <Input
               type="number"
@@ -354,7 +354,7 @@ export function KbjuCalculator({
                 : "text-[var(--app-hint)]"
             }`}
           >
-            Торт из базы
+            Торт із бази
           </button>
           <button
             type="button"
@@ -368,7 +368,7 @@ export function KbjuCalculator({
                 : "text-[var(--app-hint)]"
             }`}
           >
-            Собрать вручную
+            Зібрати вручну
           </button>
         </div>
 
@@ -376,7 +376,7 @@ export function KbjuCalculator({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <div className="sm:col-span-2">
               <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                Выберите торт
+                Оберіть торт
               </label>
               <select
                 value={selectedRecipeId}
@@ -397,7 +397,7 @@ export function KbjuCalculator({
             </div>
             <div>
               <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                Диаметр
+                Діаметр
               </label>
               <select
                 value={selectedDiameter}
@@ -431,7 +431,7 @@ export function KbjuCalculator({
                       }
                       className="app-input h-9 flex-1 rounded-lg px-2.5 text-xs"
                     >
-                      <option value="">— Ввести вручную или выбрать —</option>
+                      <option value="">— Ввести вручну або обрати —</option>
                       {ingredients.map((i) => (
                         <option key={i.id} value={i.id}>
                           {i.name} ({Math.round(i.calories100g)} ккал)
@@ -444,7 +444,7 @@ export function KbjuCalculator({
                       onChange={(e) =>
                         updateManualRow(row.id, "name", e.target.value)
                       }
-                      placeholder="Название продукта"
+                      placeholder="Назва продукту"
                       className="h-9 flex-1 text-xs"
                     />
                   )}
@@ -482,9 +482,9 @@ export function KbjuCalculator({
                 <div className="grid grid-cols-4 gap-1.5">
                   {[
                     { key: "kcal", label: "Ккал/100г" },
-                    { key: "protein", label: "Белки" },
-                    { key: "fat", label: "Жиры" },
-                    { key: "carbs", label: "Углев." },
+                    { key: "protein", label: "Білки" },
+                    { key: "fat", label: "Жири" },
+                    { key: "carbs", label: "Вугл." },
                   ].map((f) => (
                     <div key={f.key}>
                       <label className="block text-[10px] text-[var(--app-hint)] mb-0.5">
@@ -521,7 +521,7 @@ export function KbjuCalculator({
               }}
             >
               <Plus className="h-4 w-4" />
-              <span>Добавить продукт</span>
+              <span>Додати продукт</span>
             </Button>
           </div>
         )}
