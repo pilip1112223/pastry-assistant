@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronUp, Scale } from "lucide-react";
+import { ChevronDown, ChevronUp, Flame, Scale } from "lucide-react";
 import type { Ingredient } from "@/types/pastry";
 import { CURRENCIES } from "@/types/pastry";
 import { formatMoney } from "@/lib/calculations";
@@ -28,6 +28,7 @@ export function IngredientFormModal({
 }: IngredientFormModalProps) {
   const { currency, showToast } = useApp();
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState("");
   const [priceMode, setPriceMode] = useState<"pack" | "kg">("pack");
   const [pricePerKgInput, setPricePerKgInput] = useState("");
   const [packPrice, setPackPrice] = useState("");
@@ -41,6 +42,7 @@ export function IngredientFormModal({
 
   useEffect(() => {
     if (!open) return;
+    setNameError("");
     if (editing) {
       setName(editing.name);
       setPriceMode("kg");
@@ -81,12 +83,13 @@ export function IngredientFormModal({
     if (!Number.isFinite(p) || !Number.isFinite(w) || p < 0 || w <= 0) {
       return 0;
     }
-    return Math.round(((p / w) * 1000) * 100) / 100;
+    return Math.round((p / w) * 1000 * 100) / 100;
   }, [priceMode, pricePerKgInput, packPrice, packWeight]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
+      setNameError("Вкажіть назву продукту");
       showToast("Введіть назву продукту", "error");
       return;
     }
@@ -120,7 +123,9 @@ export function IngredientFormModal({
 
       hapticNotification("success");
       showToast(
-        editing ? "Продукт оновлено — техкарти перераховано" : "Продукт додано на склад",
+        editing
+          ? "Продукт оновлено — техкарти перераховано"
+          : "Продукт додано на склад",
         "success"
       );
       onSaved(data as Ingredient);
@@ -136,6 +141,8 @@ export function IngredientFormModal({
     }
   }
 
+  const sym = CURRENCIES[currency].symbol;
+
   return (
     <Modal
       open={open}
@@ -147,15 +154,19 @@ export function IngredientFormModal({
           : "Вкажіть ціну за упаковку або одразу за 1 кг"
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 pb-2" noValidate>
         <div>
-          <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1.5">
+          <label className="block text-xs font-bold text-[var(--app-hint)] mb-1.5">
             Назва продукту *
           </label>
           <Input
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (nameError) setNameError("");
+            }}
             placeholder="Наприклад: Масло вершкове 82,5%"
+            error={nameError}
             autoFocus
             required
           />
@@ -163,20 +174,20 @@ export function IngredientFormModal({
 
         {/* Smart Price Mode Toggle */}
         <div>
-          <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1.5">
+          <label className="block text-xs font-bold text-[var(--app-hint)] mb-1.5">
             Спосіб введення ціни
           </label>
-          <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-[var(--app-subtle)] p-1">
+          <div className="grid grid-cols-2 gap-1.5 rounded-[15px] bg-[var(--app-subtle)] p-1 border border-[var(--app-border)]">
             <button
               type="button"
               onClick={() => {
                 hapticImpact("light");
                 setPriceMode("pack");
               }}
-              className={`rounded-lg py-2 text-xs font-semibold transition-all cursor-pointer ${
+              className={`min-h-[40px] rounded-[11px] py-2 text-xs font-bold transition-all cursor-pointer ${
                 priceMode === "pack"
-                  ? "bg-[var(--app-card)] text-[var(--app-text)] shadow-xs"
-                  : "text-[var(--app-hint)]"
+                  ? "bg-[var(--app-card)] text-[var(--app-text)] shadow-[0_1px_4px_rgba(42,30,23,0.08)]"
+                  : "text-[var(--app-hint)] hover:text-[var(--app-text)]"
               }`}
             >
               За упаковку
@@ -187,10 +198,10 @@ export function IngredientFormModal({
                 hapticImpact("light");
                 setPriceMode("kg");
               }}
-              className={`rounded-lg py-2 text-xs font-semibold transition-all cursor-pointer ${
+              className={`min-h-[40px] rounded-[11px] py-2 text-xs font-bold transition-all cursor-pointer ${
                 priceMode === "kg"
-                  ? "bg-[var(--app-card)] text-[var(--app-text)] shadow-xs"
-                  : "text-[var(--app-hint)]"
+                  ? "bg-[var(--app-card)] text-[var(--app-text)] shadow-[0_1px_4px_rgba(42,30,23,0.08)]"
+                  : "text-[var(--app-hint)] hover:text-[var(--app-text)]"
               }`}
             >
               Одразу за 1 кг
@@ -199,11 +210,11 @@ export function IngredientFormModal({
         </div>
 
         {priceMode === "pack" ? (
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-                  Вага упаковки (г)
+                <label className="block text-xs font-bold text-[var(--app-hint)] mb-1.5">
+                  Вага упаковки
                 </label>
                 <Input
                   type="number"
@@ -213,11 +224,13 @@ export function IngredientFormModal({
                   value={packWeight}
                   onChange={(e) => setPackWeight(e.target.value)}
                   placeholder="180"
+                  suffix="г"
+                  className="tabular-nums"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-                  Ціна упаковки ({CURRENCIES[currency].symbol})
+                <label className="block text-xs font-bold text-[var(--app-hint)] mb-1.5">
+                  Ціна упаковки
                 </label>
                 <Input
                   type="number"
@@ -227,24 +240,29 @@ export function IngredientFormModal({
                   value={packPrice}
                   onChange={(e) => setPackPrice(e.target.value)}
                   placeholder="95"
+                  suffix={sym}
+                  className="tabular-nums"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-between rounded-xl bg-[var(--app-accent-soft)] px-3.5 py-2.5">
-              <span className="flex items-center gap-2 text-xs font-medium text-[var(--app-text)]">
-                <Scale className="h-4 w-4 text-[var(--app-accent)]" />
-                Ціна за 1 кг:
+            <div className="flex items-center justify-between rounded-[16px] bg-[var(--app-accent-soft)] border border-[var(--app-accent)]/15 px-4 py-3">
+              <span className="flex items-center gap-2 text-xs font-bold text-[var(--app-text)]">
+                <Scale
+                  className="h-4 w-4 text-[var(--app-accent)]"
+                  strokeWidth={2}
+                />
+                Перерахунок за 1 кг:
               </span>
-              <span className="text-sm font-bold tabular-nums text-[var(--app-accent)]">
+              <span className="text-[15px] font-extrabold tabular-nums text-[var(--app-accent)]">
                 {formatMoney(computedPricePerKg, currency)} / кг
               </span>
             </div>
           </div>
         ) : (
           <div>
-            <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-              Ціна за 1 кг ({CURRENCIES[currency].symbol})
+            <label className="block text-xs font-bold text-[var(--app-hint)] mb-1.5">
+              Ціна за 1 кг
             </label>
             <Input
               type="number"
@@ -254,21 +272,29 @@ export function IngredientFormModal({
               value={pricePerKgInput}
               onChange={(e) => setPricePerKgInput(e.target.value)}
               placeholder="520"
+              suffix={sym}
+              className="tabular-nums"
             />
           </div>
         )}
 
         {/* Collapsible Optional KBJU */}
-        <div className="rounded-xl border border-[var(--app-border)] overflow-hidden">
+        <div className="rounded-[16px] border border-[var(--app-border)] overflow-hidden bg-[var(--app-card)]">
           <button
             type="button"
             onClick={() => {
               hapticImpact("light");
               setShowKbju((v) => !v);
             }}
-            className="flex w-full items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-[var(--app-hint)] hover:bg-[var(--app-subtle)] cursor-pointer"
+            className="flex w-full min-h-[46px] items-center justify-between px-4 py-2.5 text-xs font-bold text-[var(--app-hint)] hover:bg-[var(--app-subtle)]/60 transition-colors cursor-pointer"
           >
-            <span>КБЖВ на 100 г (необов&apos;язково)</span>
+            <span className="flex items-center gap-2">
+              <Flame
+                className="h-4 w-4 text-[var(--app-kbju)]"
+                strokeWidth={1.9}
+              />
+              КБЖВ на 100 г (необов&apos;язково)
+            </span>
             {showKbju ? (
               <ChevronUp className="h-4 w-4" />
             ) : (
@@ -277,10 +303,10 @@ export function IngredientFormModal({
           </button>
 
           {showKbju && (
-            <div className="grid grid-cols-2 gap-2.5 border-t border-[var(--app-border)] p-3 bg-[var(--app-subtle)]/50">
+            <div className="grid grid-cols-2 gap-3 border-t border-[var(--app-border)] p-3.5 bg-[var(--app-bg)]/70">
               <div>
-                <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                  Калорії (ккал)
+                <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1">
+                  Калорії
                 </label>
                 <Input
                   type="number"
@@ -289,12 +315,13 @@ export function IngredientFormModal({
                   step="any"
                   value={calories}
                   onChange={(e) => setCalories(e.target.value)}
-                  className="h-9 text-xs"
+                  suffix="ккал"
+                  className="tabular-nums"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                  Білки (г)
+                <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1">
+                  Білки
                 </label>
                 <Input
                   type="number"
@@ -303,12 +330,13 @@ export function IngredientFormModal({
                   step="any"
                   value={protein}
                   onChange={(e) => setProtein(e.target.value)}
-                  className="h-9 text-xs"
+                  suffix="г"
+                  className="tabular-nums"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                  Жири (г)
+                <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1">
+                  Жири
                 </label>
                 <Input
                   type="number"
@@ -317,12 +345,13 @@ export function IngredientFormModal({
                   step="any"
                   value={fat}
                   onChange={(e) => setFat(e.target.value)}
-                  className="h-9 text-xs"
+                  suffix="г"
+                  className="tabular-nums"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                  Вуглеводи (г)
+                <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1">
+                  Вуглеводи
                 </label>
                 <Input
                   type="number"
@@ -331,14 +360,15 @@ export function IngredientFormModal({
                   step="any"
                   value={carbs}
                   onChange={(e) => setCarbs(e.target.value)}
-                  className="h-9 text-xs"
+                  suffix="г"
+                  className="tabular-nums"
                 />
               </div>
             </div>
           )}
         </div>
 
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2.5 pt-2">
           <Button
             type="button"
             variant="outline"

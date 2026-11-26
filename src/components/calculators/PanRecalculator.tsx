@@ -94,7 +94,10 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
         `${selectedRecipe.name} (коефіцієнт ×${factor.toFixed(2)})`,
         ...selectedRecipe.components.map((c) => {
           const lines = c.ingredients
-            .map((ci) => `• ${ci.ingredient.name}: ${roundGrams(ci.baseGrams * factor)} г`)
+            .map(
+              (ci) =>
+                `• ${ci.ingredient.name}: ${roundGrams(ci.baseGrams * factor)} г`
+            )
             .join("\n");
           return `\n${c.name}:\n${lines}`;
         }),
@@ -117,9 +120,9 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
     setPan: React.Dispatch<React.SetStateAction<PanSpec>>
   ) {
     return (
-      <div className="space-y-2.5 rounded-xl bg-[var(--app-subtle)] p-3">
-        <div className="text-xs font-bold">{label}</div>
-        <div className="grid grid-cols-3 gap-1 rounded-lg bg-[var(--app-card)] p-0.5 border border-[var(--app-border)]">
+      <div className="space-y-3 rounded-[16px] bg-[var(--app-bg)] border border-[var(--app-border)] p-3.5">
+        <div className="text-xs font-extrabold tracking-[-0.01em]">{label}</div>
+        <div className="grid grid-cols-3 gap-1 rounded-[12px] bg-[var(--app-card)] p-1 border border-[var(--app-border)]">
           {(["circle", "square", "rectangle"] as PanShape[]).map((s) => (
             <button
               key={s}
@@ -128,10 +131,10 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                 hapticImpact("light");
                 setPan((prev) => ({ ...prev, shape: s }));
               }}
-              className={`rounded-md py-1.5 text-[11px] font-semibold cursor-pointer transition-colors ${
+              className={`min-h-[36px] rounded-[9px] py-1.5 text-[11.5px] font-bold cursor-pointer transition-all ${
                 pan.shape === s
-                  ? "bg-[var(--app-accent)] text-[var(--app-accent-text)]"
-                  : "text-[var(--app-hint)]"
+                  ? "bg-[var(--app-accent)] text-white shadow-xs"
+                  : "text-[var(--app-hint)] hover:text-[var(--app-text)]"
               }`}
             >
               {SHAPE_LABELS[s]}
@@ -139,11 +142,11 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2.5">
           {pan.shape === "circle" && (
             <div>
-              <label className="block text-[10px] text-[var(--app-hint)] mb-0.5">
-                Діаметр (см)
+              <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1">
+                Діаметр
               </label>
               <Input
                 type="number"
@@ -151,17 +154,21 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                 min="1"
                 value={pan.diameter}
                 onChange={(e) =>
-                  setPan((p) => ({ ...p, diameter: Number(e.target.value) || 0 }))
+                  setPan((p) => ({
+                    ...p,
+                    diameter: Number(e.target.value) || 0,
+                  }))
                 }
-                className="h-9 text-sm tabular-nums"
+                suffix="см"
+                className="tabular-nums font-semibold"
               />
             </div>
           )}
 
           {pan.shape === "square" && (
             <div>
-              <label className="block text-[10px] text-[var(--app-hint)] mb-0.5">
-                Сторона (см)
+              <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1">
+                Сторона
               </label>
               <Input
                 type="number"
@@ -171,7 +178,8 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                 onChange={(e) =>
                   setPan((p) => ({ ...p, width: Number(e.target.value) || 0 }))
                 }
-                className="h-9 text-sm tabular-nums"
+                suffix="см"
+                className="tabular-nums font-semibold"
               />
             </div>
           )}
@@ -179,8 +187,8 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
           {pan.shape === "rectangle" && (
             <>
               <div>
-                <label className="block text-[10px] text-[var(--app-hint)] mb-0.5">
-                  Ширина (см)
+                <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1">
+                  Ширина
                 </label>
                 <Input
                   type="number"
@@ -188,14 +196,18 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                   min="1"
                   value={pan.width}
                   onChange={(e) =>
-                    setPan((p) => ({ ...p, width: Number(e.target.value) || 0 }))
+                    setPan((p) => ({
+                      ...p,
+                      width: Number(e.target.value) || 0,
+                    }))
                   }
-                  className="h-9 text-sm tabular-nums"
+                  suffix="см"
+                  className="tabular-nums font-semibold"
                 />
               </div>
               <div>
-                <label className="block text-[10px] text-[var(--app-hint)] mb-0.5">
-                  Довжина (см)
+                <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1">
+                  Довжина
                 </label>
                 <Input
                   type="number"
@@ -203,17 +215,21 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                   min="1"
                   value={pan.length}
                   onChange={(e) =>
-                    setPan((p) => ({ ...p, length: Number(e.target.value) || 0 }))
+                    setPan((p) => ({
+                      ...p,
+                      length: Number(e.target.value) || 0,
+                    }))
                   }
-                  className="h-9 text-sm tabular-nums"
+                  suffix="см"
+                  className="tabular-nums font-semibold"
                 />
               </div>
             </>
           )}
 
           <div>
-            <label className="block text-[10px] text-[var(--app-hint)] mb-0.5">
-              Висота (см)
+            <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1">
+              Висота
             </label>
             <Input
               type="number"
@@ -223,7 +239,8 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
               onChange={(e) =>
                 setPan((p) => ({ ...p, height: Number(e.target.value) || 0 }))
               }
-              className="h-9 text-sm tabular-nums"
+              suffix="см"
+              className="tabular-nums font-semibold"
             />
           </div>
         </div>
@@ -234,8 +251,8 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
   return (
     <div className="space-y-4">
       {/* Mode Switcher */}
-      <Card className="p-4 space-y-3.5">
-        <div className="grid grid-cols-3 gap-1 rounded-xl bg-[var(--app-subtle)] p-1">
+      <Card className="p-4.5 space-y-4">
+        <div className="grid grid-cols-3 gap-1 rounded-[15px] bg-[var(--app-subtle)] p-1 border border-[var(--app-border)]">
           {[
             { id: "pan", label: "За формою" },
             { id: "weight", label: "За вагою" },
@@ -248,10 +265,10 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                 hapticImpact("light");
                 setMode(m.id as "pan" | "weight" | "multiplier");
               }}
-              className={`rounded-lg py-2 text-xs font-semibold transition-all cursor-pointer ${
+              className={`min-h-[40px] rounded-[11px] py-2 text-xs font-bold transition-all cursor-pointer ${
                 mode === m.id
-                  ? "bg-[var(--app-card)] text-[var(--app-text)] shadow-xs"
-                  : "text-[var(--app-hint)]"
+                  ? "bg-[var(--app-card)] text-[var(--app-text)] shadow-[0_1px_4px_rgba(42,30,23,0.08)]"
+                  : "text-[var(--app-hint)] hover:text-[var(--app-text)]"
               }`}
             >
               {m.label}
@@ -269,8 +286,8 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
         {mode === "weight" && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-                Вага за рецептом (кг)
+              <label className="block text-xs font-bold text-[var(--app-hint)] mb-1.5">
+                Вага за рецептом
               </label>
               <Input
                 type="number"
@@ -279,11 +296,13 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                 step="0.1"
                 value={fromWeightKg}
                 onChange={(e) => setFromWeightKg(e.target.value)}
+                suffix="кг"
+                className="tabular-nums font-semibold"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
-                Потрібна вага (кг)
+              <label className="block text-xs font-bold text-[var(--app-hint)] mb-1.5">
+                Потрібна вага
               </label>
               <Input
                 type="number"
@@ -292,14 +311,16 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                 step="0.1"
                 value={toWeightKg}
                 onChange={(e) => setToWeightKg(e.target.value)}
+                suffix="кг"
+                className="tabular-nums font-semibold"
               />
             </div>
           </div>
         )}
 
         {mode === "multiplier" && (
-          <div className="space-y-2.5">
-            <div className="flex flex-wrap gap-1.5">
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
               {[
                 { label: "÷ 2 (×0.5)", val: "0.5" },
                 { label: "× 1.5", val: "1.5" },
@@ -313,10 +334,10 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                     hapticImpact("light");
                     setMultiplier(chip.val);
                   }}
-                  className={`rounded-xl px-3.5 py-2 text-xs font-bold cursor-pointer transition-colors ${
+                  className={`min-h-[44px] rounded-[13px] px-4 py-2 text-xs font-extrabold tabular-nums cursor-pointer active:scale-95 transition-all ${
                     multiplier === chip.val
-                      ? "bg-[var(--app-accent)] text-[var(--app-accent-text)]"
-                      : "bg-[var(--app-subtle)] text-[var(--app-text)]"
+                      ? "bg-[var(--app-accent)] text-white shadow-[0_3px_10px_rgba(200,90,50,0.24)]"
+                      : "bg-[var(--app-subtle)] border border-[var(--app-border)] text-[var(--app-text)]"
                   }`}
                 >
                   {chip.label}
@@ -324,7 +345,7 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
               ))}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
+              <label className="block text-xs font-bold text-[var(--app-hint)] mb-1.5">
                 Свій коефіцієнт
               </label>
               <Input
@@ -334,33 +355,37 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                 step="any"
                 value={multiplier}
                 onChange={(e) => setMultiplier(e.target.value)}
+                suffix="×"
+                className="tabular-nums font-semibold"
               />
             </div>
           </div>
         )}
 
         {/* Resulting Coefficient Banner */}
-        <div className="flex items-center justify-between rounded-xl bg-[var(--app-accent-soft)] px-3.5 py-2.5">
-          <span className="text-xs font-semibold">Коефіцієнт перерахунку</span>
-          <span className="text-base font-bold tabular-nums text-[var(--app-accent)]">
+        <div className="flex items-center justify-between rounded-[16px] bg-[var(--app-accent-soft)] border border-[var(--app-accent)]/15 px-4 py-3">
+          <span className="text-xs font-bold text-[var(--app-text)]">
+            Коефіцієнт перерахунку
+          </span>
+          <span className="text-lg font-extrabold tabular-nums text-[var(--app-accent)]">
             × {factor.toFixed(2)}
           </span>
         </div>
       </Card>
 
       {/* Source Toggle (Saved Cake vs Manual Text) */}
-      <Card className="p-4 space-y-3.5">
+      <Card className="p-4.5 space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <div className="grid grid-cols-2 gap-1 rounded-xl bg-[var(--app-subtle)] p-1 flex-1">
+          <div className="grid grid-cols-2 gap-1 rounded-[15px] bg-[var(--app-subtle)] p-1 border border-[var(--app-border)] flex-1">
             <button
               type="button"
               onClick={() => {
                 hapticImpact("light");
                 setSourceType("text");
               }}
-              className={`rounded-lg py-1.5 text-xs font-semibold cursor-pointer ${
+              className={`min-h-[40px] rounded-[11px] py-2 text-xs font-bold cursor-pointer transition-all ${
                 sourceType === "text"
-                  ? "bg-[var(--app-card)] text-[var(--app-text)] shadow-xs"
+                  ? "bg-[var(--app-card)] text-[var(--app-text)] shadow-[0_1px_4px_rgba(42,30,23,0.08)]"
                   : "text-[var(--app-hint)]"
               }`}
             >
@@ -376,9 +401,9 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                   setSelectedRecipeId(String(recipes[0].id));
                 }
               }}
-              className={`rounded-lg py-1.5 text-xs font-semibold cursor-pointer disabled:opacity-40 ${
+              className={`min-h-[40px] rounded-[11px] py-2 text-xs font-bold cursor-pointer transition-all disabled:opacity-40 ${
                 sourceType === "recipe"
-                  ? "bg-[var(--app-card)] text-[var(--app-text)] shadow-xs"
+                  ? "bg-[var(--app-card)] text-[var(--app-text)] shadow-[0_1px_4px_rgba(42,30,23,0.08)]"
                   : "text-[var(--app-hint)]"
               }`}
             >
@@ -395,7 +420,7 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
               sourceType === "text" ? !rawText.trim() : !selectedRecipe
             }
           >
-            <Copy className="h-3.5 w-3.5" />
+            <Copy className="h-4 w-4" strokeWidth={2} />
             <span>Копія</span>
           </Button>
         </div>
@@ -403,7 +428,7 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
         {sourceType === "text" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[var(--app-hint)] mb-1">
+              <label className="block text-xs font-bold text-[var(--app-hint)] mb-1.5">
                 Початковий рецепт
               </label>
               <textarea
@@ -413,19 +438,19 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                 placeholder={
                   "Вставте грамування по рядках, наприклад:\nБорошно — 250 г\nЦукор — 180 г\nВершки 33% — 400 г\nЯйця — 3 шт"
                 }
-                className="app-input w-full rounded-xl p-3 text-sm leading-relaxed resize-none"
+                className="app-input w-full rounded-[16px] p-3.5 text-sm leading-relaxed resize-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[var(--app-accent)] mb-1">
+              <label className="block text-xs font-bold text-[var(--app-accent)] mb-1.5 tabular-nums">
                 Перерахований рецепт (×{factor.toFixed(2)})
               </label>
-              <div className="min-h-[178px] whitespace-pre-wrap rounded-xl border border-[var(--app-accent)]/30 bg-[var(--app-accent-soft)]/50 p-3 text-sm leading-relaxed tabular-nums">
+              <div className="min-h-[186px] whitespace-pre-wrap rounded-[16px] border border-[var(--app-accent)]/25 bg-[var(--app-accent-soft)]/55 p-3.5 text-sm leading-relaxed tabular-nums font-medium">
                 {scaledText.trim() ? (
                   scaledText
                 ) : (
-                  <span className="text-[var(--app-hint)]">
+                  <span className="font-normal text-[var(--app-hint)]">
                     Результат з&apos;явиться тут автоматично. Відсотки жирності
                     (33%) та температури (°C) не змінюються.
                   </span>
@@ -449,7 +474,7 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                   }));
                 }
               }}
-              className="app-input h-11 w-full rounded-xl px-3 text-sm font-medium"
+              className="app-input h-11 min-h-[44px] w-full rounded-[14px] px-3.5 text-sm font-semibold"
             >
               {recipes.map((r) => (
                 <option key={r.id} value={r.id}>
@@ -463,24 +488,26 @@ export function PanRecalculator({ recipes }: PanRecalculatorProps) {
                 {selectedRecipe.components.map((comp) => (
                   <div
                     key={comp.id}
-                    className="rounded-xl border border-[var(--app-border)] overflow-hidden"
+                    className="rounded-[16px] border border-[var(--app-border)] overflow-hidden"
                   >
-                    <div className="bg-[var(--app-subtle)] px-3 py-2 text-xs font-bold">
+                    <div className="bg-[var(--app-bg)] px-3.5 py-2.5 text-xs font-extrabold tracking-[-0.01em] border-b border-[var(--app-border)]">
                       {comp.name}
                     </div>
                     <div className="divide-y divide-[var(--app-border)]">
                       {comp.ingredients.map((ci) => (
                         <div
                           key={ci.id}
-                          className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
+                          className="flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm"
                         >
-                          <span className="truncate">{ci.ingredient.name}</span>
+                          <span className="truncate font-medium">
+                            {ci.ingredient.name}
+                          </span>
                           <span className="flex items-center gap-1.5 shrink-0 tabular-nums text-xs">
                             <span className="text-[var(--app-hint)]">
                               {roundGrams(ci.baseGrams)} г
                             </span>
-                            <ArrowRight className="h-3 w-3 text-[var(--app-hint)]" />
-                            <strong className="text-sm text-[var(--app-accent)]">
+                            <ArrowRight className="h-3.5 w-3.5 text-[var(--app-hint)]" />
+                            <strong className="rounded-full bg-[var(--app-accent-soft)] px-2.5 py-0.5 text-[13px] font-extrabold text-[var(--app-accent)]">
                               {roundGrams(ci.baseGrams * factor)} г
                             </strong>
                           </span>

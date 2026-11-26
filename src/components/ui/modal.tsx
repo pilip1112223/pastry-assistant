@@ -43,37 +43,41 @@ export function Modal({
       aria-modal="true"
     >
       <div
-        className="fixed inset-0 bg-black/45 backdrop-blur-[2px]"
+        className="fixed inset-0 bg-[#2A1E17]/38 backdrop-blur-[4px] animate-fade-in"
         onClick={onClose}
       />
       <div
         className={cn(
-          "relative z-10 flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-t-3xl sm:max-w-lg sm:rounded-3xl",
-          "bg-[var(--app-card)] text-[var(--app-text)] shadow-2xl border border-[var(--app-border)]",
+          "relative z-10 flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-t-[28px] sm:max-w-lg sm:rounded-[24px]",
+          "bg-[var(--app-card)] text-[var(--app-text)] border border-[var(--app-border)] shadow-[var(--app-shadow-sheet)] sm:shadow-2xl animate-sheet-up",
           className
         )}
       >
-        {/* Drag handle for mobile sheet aesthetic */}
-        <div className="flex justify-center pt-2.5 sm:hidden">
-          <div className="h-1 w-10 rounded-full bg-[var(--app-border)]" />
+        {/* Drag handle for mobile bottom sheet */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="h-1.5 w-11 rounded-full bg-[#DFD3C5]" />
         </div>
-        <div className="flex items-start justify-between gap-3 border-b border-[var(--app-border)] px-5 py-3.5">
-          <div>
-            <h2 className="text-base font-bold leading-snug">{title}</h2>
+        <div className="flex items-start justify-between gap-3 border-b border-[var(--app-border)] px-5 py-3.5 sm:py-4">
+          <div className="min-w-0 pt-0.5">
+            <h2 className="text-[17px] font-bold tracking-[-0.015em] leading-snug">
+              {title}
+            </h2>
             {subtitle && (
-              <p className="mt-0.5 text-xs text-[var(--app-hint)]">{subtitle}</p>
+              <p className="mt-0.5 text-xs text-[var(--app-hint)] leading-relaxed">
+                {subtitle}
+              </p>
             )}
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Закрити"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--app-subtle)] text-[var(--app-hint)] hover:text-[var(--app-text)] cursor-pointer"
+            className="flex h-11 w-11 min-h-[44px] min-w-[44px] -mr-1.5 -mt-1 shrink-0 items-center justify-center rounded-full bg-[var(--app-subtle)] text-[var(--app-hint)] hover:bg-[#ece3d7] hover:text-[var(--app-text)] active:scale-[0.95] transition-all cursor-pointer"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4.5 w-4.5" strokeWidth={2} />
           </button>
         </div>
-        <div className="overflow-y-auto px-5 py-4 pb-6">{children}</div>
+        <div className="overflow-y-auto px-5 py-4 pb-safe">{children}</div>
       </div>
     </div>
   );

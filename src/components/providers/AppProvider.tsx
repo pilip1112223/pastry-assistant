@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import { AlertCircle, CheckCircle2, Info } from "lucide-react";
 import type { CurrencyCode } from "@/types/pastry";
 import { CURRENCIES } from "@/types/pastry";
 import { hapticImpact, initTelegramWebApp } from "@/lib/telegram";
@@ -37,7 +38,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(CURRENCY_STORAGE_KEY) as CurrencyCode | null;
+      const saved = localStorage.getItem(
+        CURRENCY_STORAGE_KEY
+      ) as CurrencyCode | null;
       if (saved && saved in CURRENCIES) {
         setCurrencyState(saved);
       }
@@ -73,7 +76,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setToasts((prev) => [...prev, { id, text, type }]);
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 2800);
+      }, 3000);
     },
     []
   );
@@ -90,22 +93,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     >
       {children}
 
-      {/* Floating toast notifications positioned safely above mobile bottom nav */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-20 z-50 flex flex-col items-center gap-2 px-4 sm:bottom-6">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={`pointer-events-auto max-w-sm rounded-2xl px-4 py-2.5 text-sm font-medium shadow-lg backdrop-blur-md transition-all ${
-              toast.type === "error"
-                ? "bg-[#c44536] text-white"
-                : toast.type === "success"
-                ? "bg-[#2f6847] text-white"
-                : "bg-[#2c1f1a] text-[#faf6f1]"
-            }`}
-          >
-            {toast.text}
-          </div>
-        ))}
+      {/* Floating artisanal toast notifications positioned safely above mobile bottom tab bar */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[60] flex flex-col items-center gap-2 px-4 md:bottom-6">
+        {toasts.map((toast) => {
+          const Icon =
+            toast.type === "error"
+              ? AlertCircle
+              : toast.type === "success"
+              ? CheckCircle2
+              : Info;
+          return (
+            <div
+              key={toast.id}
+              className={`pointer-events-auto animate-toast-in flex items-center gap-2.5 max-w-sm rounded-2xl border px-4 py-3 text-[13px] font-semibold shadow-[0_10px_30px_-6px_rgba(42,30,23,0.22)] backdrop-blur-md ${
+                toast.type === "error"
+                  ? "border-[#b23728] bg-[#c44536] text-white"
+                  : toast.type === "success"
+                  ? "border-[#255b3c] bg-[#2f704b] text-white"
+                  : "border-[#3c2d24] bg-[#2a1e17] text-[#faf7f2]"
+              }`}
+            >
+              <Icon className="h-4.5 w-4.5 shrink-0 opacity-95" strokeWidth={2.2} />
+              <span className="leading-snug">{toast.text}</span>
+            </div>
+          );
+        })}
       </div>
     </AppContext.Provider>
   );

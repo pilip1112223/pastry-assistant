@@ -60,7 +60,9 @@ export default function ProcurementPage() {
         fetch("/api/procurement", { cache: "no-store" }),
       ]);
       const recData: RecipeWithDetails[] = recRes.ok ? await recRes.json() : [];
-      const planData: ProcurementPlan[] = planRes.ok ? await planRes.json() : [];
+      const planData: ProcurementPlan[] = planRes.ok
+        ? await planRes.json()
+        : [];
 
       setRecipes(recData);
       setPlans(planData);
@@ -251,7 +253,9 @@ export default function ProcurementPage() {
     const cakesLines = items
       .map((item) => {
         const r = recipeMap.get(item.recipe_id);
-        return r ? `• ${r.name} (Ø ${item.diameter} см) × ${item.quantity} шт` : null;
+        return r
+          ? `• ${r.name} (Ø ${item.diameter} см) × ${item.quantity} шт`
+          : null;
       })
       .filter(Boolean)
       .join("\n");
@@ -304,29 +308,32 @@ export default function ProcurementPage() {
   ).length;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Закупівля</h1>
-          <p className="text-xs text-[var(--app-hint)]">
+          <h1 className="text-[22px] sm:text-2xl font-extrabold tracking-[-0.025em]">
+            Закупівля
+          </h1>
+          <p className="mt-0.5 text-xs font-medium text-[var(--app-hint)]">
             Загальний список продуктів під обрані замовлення
           </p>
         </div>
         {recipes.length > 0 && (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             {plans.length > 0 && (
               <Button variant="outline" size="sm" onClick={handleNewPlan}>
-                <Plus className="h-3.5 w-3.5" />
-                <span>Новий</span>
+                <Plus className="h-4 w-4" strokeWidth={2.2} />
+                <span className="hidden sm:inline">Новий</span>
               </Button>
             )}
             <Button
               size="sm"
               onClick={handleSavePlan}
               disabled={saving || items.length === 0}
+              className="px-4"
             >
-              <Save className="h-3.5 w-3.5" />
+              <Save className="h-4 w-4" strokeWidth={2.1} />
               <span>{saving ? "..." : "Зберегти"}</span>
             </Button>
           </div>
@@ -334,24 +341,37 @@ export default function ProcurementPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          <div className="h-36 rounded-2xl bg-[var(--app-subtle)] animate-pulse" />
-          <div className="h-44 rounded-2xl bg-[var(--app-subtle)] animate-pulse" />
+        <div className="space-y-4">
+          <Card className="p-4.5 space-y-3">
+            <div className="h-11 w-full rounded-[14px] skeleton-shimmer" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="h-11 rounded-[14px] skeleton-shimmer" />
+              <div className="h-11 rounded-[14px] skeleton-shimmer" />
+            </div>
+            <div className="h-11 w-full rounded-[14px] skeleton-shimmer" />
+          </Card>
+          <Card className="p-4.5 space-y-3">
+            <div className="h-6 w-40 rounded-lg skeleton-shimmer" />
+            <div className="h-14 w-full rounded-xl skeleton-shimmer" />
+            <div className="h-14 w-full rounded-xl skeleton-shimmer" />
+          </Card>
         </div>
       ) : recipes.length === 0 ? (
-        <Card className="p-8 text-center">
-          <div className="mx-auto mb-3.5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--app-accent-soft)] text-[var(--app-accent)]">
-            <ShoppingBasket className="h-7 w-7" />
+        <Card className="p-8 sm:p-10 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[22px] bg-[var(--app-accent-soft)] text-[var(--app-accent)] shadow-[inset_0_0_0_1px_rgba(200,90,50,0.14)]">
+            <ShoppingBasket className="h-8 w-8" strokeWidth={1.7} />
           </div>
-          <h2 className="text-base font-bold">Спочатку додайте рецепти</h2>
-          <p className="mx-auto mt-1.5 max-w-xs text-xs text-[var(--app-hint)] leading-relaxed">
+          <h2 className="text-[17px] font-extrabold tracking-[-0.015em]">
+            Спочатку додайте рецепти
+          </h2>
+          <p className="mx-auto mt-2 max-w-sm text-[13px] text-[var(--app-hint)] leading-relaxed">
             Планувальник закупівель збирає продукти з ваших збережених техкарт і
-            перераховує їх під обрані діаметри.
+            автоматично підсумовує їх під потрібні діаметри.
           </p>
-          <Link href="/recipes/new" className="inline-block mt-5">
-            <Button>
-              <Plus className="h-4 w-4" />
-              <span>Створити перший торт</span>
+          <Link href="/recipes/new" className="inline-block mt-6">
+            <Button className="px-6">
+              <Plus className="h-4 w-4" strokeWidth={2.3} />
+              <span>Додати перший торт</span>
             </Button>
           </Link>
         </Card>
@@ -359,7 +379,7 @@ export default function ProcurementPage() {
         <>
           {/* Saved Plans Bar */}
           {plans.length > 0 && (
-            <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
               {plans.map((p) => {
                 const active = p.id === activePlanId;
                 return (
@@ -372,10 +392,10 @@ export default function ProcurementPage() {
                       setPlanName(p.name);
                       setItems(p.itemsJson ?? []);
                     }}
-                    className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                    className={`shrink-0 min-h-[40px] rounded-full px-4 py-2 text-xs font-bold transition-all active:scale-[0.97] cursor-pointer ${
                       active
-                        ? "bg-[var(--app-accent)] text-[var(--app-accent-text)]"
-                        : "bg-[var(--app-card)] border border-[var(--app-border)] text-[var(--app-text)]"
+                        ? "bg-[var(--app-accent)] text-white shadow-[0_3px_10px_rgba(200,90,50,0.24)]"
+                        : "bg-[var(--app-card)] border border-[var(--app-border)] text-[var(--app-text)] hover:border-[var(--app-border-strong)]"
                     }`}
                   >
                     {p.name}
@@ -386,13 +406,13 @@ export default function ProcurementPage() {
           )}
 
           {/* Plan Name + Cake Adder Card */}
-          <Card className="p-4 space-y-3.5">
+          <Card className="p-4.5 space-y-4">
             <div className="flex items-center gap-2">
               <Input
                 value={planName}
                 onChange={(e) => setPlanName(e.target.value)}
                 placeholder="Назва закупівлі (напр. На суботу)"
-                className="font-semibold"
+                className="font-bold text-[15px]"
               />
               {activePlanId && (
                 <Button
@@ -402,14 +422,14 @@ export default function ProcurementPage() {
                   onClick={handleDeletePlan}
                   aria-label="Видалити план"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" strokeWidth={2} />
                 </Button>
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
               <div className="sm:col-span-6">
-                <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
+                <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1.5">
                   Торт із бази
                 </label>
                 <select
@@ -419,7 +439,7 @@ export default function ProcurementPage() {
                     const rec = recipeMap.get(Number(e.target.value));
                     if (rec) setSelectedDiameter(rec.baseDiameter || 16);
                   }}
-                  className="app-input h-11 w-full rounded-xl px-3 text-sm"
+                  className="app-input h-11 min-h-[44px] w-full rounded-[14px] px-3.5 text-sm font-semibold"
                 >
                   {recipes.map((r) => (
                     <option key={r.id} value={r.id}>
@@ -429,15 +449,17 @@ export default function ProcurementPage() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5 sm:col-span-6">
+              <div className="grid grid-cols-2 gap-3 sm:col-span-6">
                 <div>
-                  <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
+                  <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1.5">
                     Діаметр
                   </label>
                   <select
                     value={selectedDiameter}
-                    onChange={(e) => setSelectedDiameter(Number(e.target.value))}
-                    className="app-input h-11 w-full rounded-xl px-3 text-sm tabular-nums"
+                    onChange={(e) =>
+                      setSelectedDiameter(Number(e.target.value))
+                    }
+                    className="app-input h-11 min-h-[44px] w-full rounded-[14px] px-3.5 text-sm font-semibold tabular-nums"
                   >
                     {DIAMETERS.map((d) => (
                       <option key={d} value={d}>
@@ -448,8 +470,8 @@ export default function ProcurementPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                    Кількість (шт)
+                  <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1.5">
+                    Кількість
                   </label>
                   <Input
                     type="number"
@@ -460,6 +482,8 @@ export default function ProcurementPage() {
                     onChange={(e) =>
                       setSelectedQty(Math.max(1, Number(e.target.value) || 1))
                     }
+                    suffix="шт"
+                    className="tabular-nums font-bold"
                   />
                 </div>
               </div>
@@ -471,14 +495,14 @@ export default function ProcurementPage() {
               className="w-full"
               onClick={handleAddCakeToPlan}
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4" strokeWidth={2.3} />
               <span>Додати до списку закупівлі</span>
             </Button>
 
             {/* Selected Cakes List */}
             {items.length > 0 && (
-              <div className="space-y-2 border-t border-[var(--app-border)] pt-3">
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--app-hint)]">
+              <div className="space-y-2 border-t border-[var(--app-border)] pt-3.5">
+                <div className="text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--app-hint)]">
                   Обрані торти ({summary.totalCakesCount} шт)
                 </div>
                 {items.map((item, idx) => {
@@ -487,13 +511,13 @@ export default function ProcurementPage() {
                   return (
                     <div
                       key={`${item.recipe_id}-${item.diameter}`}
-                      className="flex items-center justify-between gap-2 rounded-xl bg-[var(--app-subtle)] px-3 py-2"
+                      className="flex items-center justify-between gap-2 rounded-[15px] bg-[var(--app-bg)] border border-[var(--app-border)] px-3.5 py-2.5"
                     >
                       <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold">
+                        <div className="truncate text-[14px] font-bold">
                           {rec.name}
                         </div>
-                        <div className="text-xs text-[var(--app-hint)]">
+                        <div className="text-xs font-medium text-[var(--app-hint)] tabular-nums">
                           Діаметр {item.diameter} см
                         </div>
                       </div>
@@ -503,20 +527,20 @@ export default function ProcurementPage() {
                           type="button"
                           onClick={() => updateItemQuantity(idx, -1)}
                           aria-label="Зменшити"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--app-card)] border border-[var(--app-border)] cursor-pointer active:scale-95"
+                          className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-[12px] bg-[var(--app-card)] border border-[var(--app-border)] hover:border-[var(--app-border-strong)] cursor-pointer active:scale-95 transition-all"
                         >
-                          <Minus className="h-3.5 w-3.5" />
+                          <Minus className="h-4 w-4" />
                         </button>
-                        <span className="w-7 text-center text-sm font-bold tabular-nums">
+                        <span className="w-8 text-center text-[15px] font-extrabold tabular-nums">
                           {item.quantity}
                         </span>
                         <button
                           type="button"
                           onClick={() => updateItemQuantity(idx, 1)}
                           aria-label="Збільшити"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--app-card)] border border-[var(--app-border)] cursor-pointer active:scale-95"
+                          className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-[12px] bg-[var(--app-card)] border border-[var(--app-border)] hover:border-[var(--app-border-strong)] cursor-pointer active:scale-95 transition-all"
                         >
-                          <Plus className="h-3.5 w-3.5" />
+                          <Plus className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -529,26 +553,28 @@ export default function ProcurementPage() {
           {/* Shopping List Output */}
           {summary.shoppingList.length > 0 ? (
             <Card className="overflow-hidden">
-              <div className="p-4 border-b border-[var(--app-border)] space-y-3">
+              <div className="p-4.5 border-b border-[var(--app-border)] space-y-3.5 bg-[var(--app-bg)]/40">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <h2 className="text-base font-bold">Список покупок</h2>
-                    <p className="text-xs text-[var(--app-hint)]">
+                    <h2 className="text-[17px] font-extrabold tracking-[-0.015em]">
+                      Список покупок
+                    </h2>
+                    <p className="text-xs font-medium text-[var(--app-hint)] tabular-nums">
                       Куплено {boughtCount} із {summary.shoppingList.length}
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className="text-[11px] text-[var(--app-hint)]">
-                      Сума закупівлі
+                    <div className="text-[10.5px] font-bold uppercase tracking-[0.04em] text-[var(--app-hint)]">
+                      Орієнтовна сума
                     </div>
-                    <div className="text-lg font-bold tabular-nums text-[var(--app-accent)]">
+                    <div className="text-[19px] font-extrabold tabular-nums text-[var(--app-accent)]">
                       {formatMoney(summary.totalBudget, currency)}
                     </div>
                   </div>
                 </div>
 
-                {/* Progress bar */}
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--app-subtle)]">
+                {/* Smooth Progress bar */}
+                <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--app-subtle)]">
                   <div
                     className="h-full rounded-full bg-[var(--app-success)] transition-all duration-300"
                     style={{
@@ -560,14 +586,13 @@ export default function ProcurementPage() {
                 </div>
 
                 {/* Share & Copy Actions */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2.5">
                   <Button
                     type="button"
                     size="sm"
                     onClick={handleShareTelegram}
-                    className="h-10"
                   >
-                    <Send className="h-3.5 w-3.5" />
+                    <Send className="h-4 w-4" strokeWidth={2} />
                     <span>У Telegram</span>
                   </Button>
                   <Button
@@ -575,9 +600,8 @@ export default function ProcurementPage() {
                     variant="outline"
                     size="sm"
                     onClick={handleCopy}
-                    className="h-10"
                   >
-                    <Copy className="h-3.5 w-3.5" />
+                    <Copy className="h-4 w-4" strokeWidth={2} />
                     <span>Скопіювати</span>
                   </Button>
                 </div>
@@ -592,17 +616,17 @@ export default function ProcurementPage() {
                       key={item.ingredientId}
                       type="button"
                       onClick={() => toggleChecked(item.ingredientId)}
-                      className={`flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors cursor-pointer ${
+                      className={`flex w-full min-h-[60px] items-center gap-3.5 px-4.5 py-3.5 text-left transition-all active:bg-[var(--app-subtle)] cursor-pointer ${
                         checked
-                          ? "bg-[var(--app-subtle)]/50 opacity-60"
-                          : "hover:bg-[var(--app-subtle)]/40"
+                          ? "bg-[var(--app-bg)]/60 opacity-65"
+                          : "hover:bg-[var(--app-bg)]/50"
                       }`}
                     >
                       <span
                         className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 transition-all ${
                           checked
-                            ? "border-[var(--app-success)] bg-[var(--app-success)] text-white"
-                            : "border-[var(--app-border)] bg-[var(--app-card)]"
+                            ? "border-[var(--app-success)] bg-[var(--app-success)] text-white scale-105"
+                            : "border-[var(--app-border-strong)] bg-[var(--app-card)]"
                         }`}
                       >
                         {checked && <Check className="h-4 w-4 stroke-[3]" />}
@@ -610,19 +634,21 @@ export default function ProcurementPage() {
 
                       <div className="min-w-0 flex-1">
                         <div
-                          className={`text-sm font-semibold ${
-                            checked ? "line-through text-[var(--app-hint)]" : ""
+                          className={`text-[14.5px] font-bold ${
+                            checked
+                              ? "line-through text-[var(--app-hint)]"
+                              : ""
                           }`}
                         >
                           {item.name}
                         </div>
-                        <div className="text-xs tabular-nums text-[var(--app-hint)]">
+                        <div className="text-xs font-medium tabular-nums text-[var(--app-hint)]">
                           ~{formatMoney(item.estimatedCost, currency)}
                         </div>
                       </div>
 
                       <div className="shrink-0 text-right">
-                        <span className="rounded-lg bg-[var(--app-subtle)] px-2.5 py-1 text-sm font-bold tabular-nums">
+                        <span className="inline-block rounded-full bg-[var(--app-subtle)] px-3 py-1 text-[13px] font-extrabold tabular-nums text-[var(--app-text)]">
                           {formatWeightDetailed(item.totalGrams)}
                         </span>
                       </div>
@@ -632,9 +658,14 @@ export default function ProcurementPage() {
               </div>
             </Card>
           ) : (
-            <Card className="p-6 text-center text-xs text-[var(--app-hint)]">
-              Оберіть один або кілька тортів вище, щоб сформувати загальний
-              список покупок.
+            <Card className="p-7 text-center">
+              <p className="text-sm font-semibold text-[var(--app-text)]">
+                Список покупок поки порожній
+              </p>
+              <p className="mt-1 text-xs text-[var(--app-hint)]">
+                Оберіть один або кілька тортів вище, щоб сформувати загальний
+                перелік інгредієнтів.
+              </p>
             </Card>
           )}
         </>

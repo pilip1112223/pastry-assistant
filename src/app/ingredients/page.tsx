@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Package, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Flame, Package, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import type { Ingredient } from "@/types/pastry";
 import { formatMoney } from "@/lib/calculations";
 import { hapticImpact, hapticNotification } from "@/lib/telegram";
@@ -93,19 +93,21 @@ export default function IngredientsPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Склад і ціни</h1>
-          <p className="text-xs text-[var(--app-hint)]">
+          <h1 className="text-[22px] sm:text-2xl font-extrabold tracking-[-0.025em]">
+            Склад і ціни
+          </h1>
+          <p className="mt-0.5 text-xs font-medium text-[var(--app-hint)]">
             {ingredients.length > 0
               ? `Продуктів у базі: ${ingredients.length}`
               : "База продуктів для розрахунку собівартості"}
           </p>
         </div>
-        <Button onClick={openCreate} size="sm" className="shrink-0 h-10 px-3.5">
-          <Plus className="h-4 w-4" />
+        <Button onClick={openCreate} size="sm" className="shrink-0 px-4">
+          <Plus className="h-4 w-4" strokeWidth={2.3} />
           <span>Продукт</span>
         </Button>
       </div>
@@ -113,48 +115,77 @@ export default function IngredientsPage() {
       {/* Search */}
       {ingredients.length > 0 && (
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--app-hint)]" />
+          <Search
+            className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--app-hint)]"
+            strokeWidth={1.9}
+          />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Пошук продукту..."
-            className="pl-10"
+            className="pl-10 pr-11"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              aria-label="Очистити пошук"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-xl text-[var(--app-hint)] hover:bg-[var(--app-subtle)] hover:text-[var(--app-text)] cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
       )}
 
       {/* Content */}
       {loading ? (
         <div className="space-y-2.5">
-          {[1, 2, 3].map((n) => (
-            <div
-              key={n}
-              className="h-18 rounded-2xl bg-[var(--app-subtle)] animate-pulse"
-            />
+          {[1, 2, 3, 4, 5].map((n) => (
+            <Card key={n} className="flex items-center justify-between p-4">
+              <div className="space-y-2 flex-1">
+                <div className="h-4 w-44 rounded-lg skeleton-shimmer" />
+                <div className="flex gap-2">
+                  <div className="h-5 w-24 rounded-full skeleton-shimmer" />
+                  <div className="h-5 w-32 rounded-full skeleton-shimmer" />
+                </div>
+              </div>
+              <div className="flex gap-1.5">
+                <div className="h-10 w-10 rounded-xl skeleton-shimmer" />
+                <div className="h-10 w-10 rounded-xl skeleton-shimmer" />
+              </div>
+            </Card>
           ))}
         </div>
       ) : ingredients.length === 0 ? (
-        <Card className="p-8 text-center">
-          <div className="mx-auto mb-3.5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--app-accent-soft)] text-[var(--app-accent)]">
-            <Package className="h-7 w-7" />
+        <Card className="p-8 sm:p-10 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[22px] bg-[var(--app-accent-soft)] text-[var(--app-accent)] shadow-[inset_0_0_0_1px_rgba(200,90,50,0.14)]">
+            <Package className="h-8 w-8" strokeWidth={1.7} />
           </div>
-          <h2 className="text-base font-bold">Склад поки порожній</h2>
-          <p className="mx-auto mt-1.5 max-w-xs text-xs text-[var(--app-hint)] leading-relaxed">
-            Додайте продукти, з якими працюєте. Ціну можна вказати одразу за
-            1 кг або за упаковку — система перерахує сама.
+          <h2 className="text-[17px] font-extrabold tracking-[-0.015em]">
+            Склад поки порожній
+          </h2>
+          <p className="mx-auto mt-2 max-w-sm text-[13px] text-[var(--app-hint)] leading-relaxed">
+            Додайте інгредієнти, з якими працюєте. Ціну можна вказати за
+            упаковку або одразу за 1 кг — система перерахує автоматично.
           </p>
-          <Button onClick={openCreate} className="mt-5">
-            <Plus className="h-4 w-4" />
+          <Button onClick={openCreate} className="mt-6 px-6">
+            <Plus className="h-4 w-4" strokeWidth={2.3} />
             <span>Додати перший продукт</span>
           </Button>
         </Card>
       ) : filtered.length === 0 ? (
-        <Card className="p-6 text-center">
-          <p className="text-sm font-medium">За запитом «{search}» нічого не знайдено</p>
+        <Card className="p-7 text-center">
+          <p className="text-sm font-semibold">
+            За запитом «{search}» нічого не знайдено
+          </p>
+          <p className="mt-1 text-xs text-[var(--app-hint)]">
+            Ви можете миттєво додати цей продукт на склад
+          </p>
           <Button
             variant="secondary"
             size="sm"
-            className="mt-3"
+            className="mt-4"
             onClick={() => {
               setEditing(null);
               setModalOpen(true);
@@ -165,7 +196,7 @@ export default function IngredientsPage() {
           </Button>
         </Card>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {filtered.map((item) => {
             const hasKbju =
               item.calories100g > 0 ||
@@ -176,20 +207,22 @@ export default function IngredientsPage() {
             return (
               <Card
                 key={item.id}
-                className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:border-[var(--app-accent)]/40"
+                className="flex items-center justify-between gap-3 px-4 py-3.5 transition-all hover:border-[var(--app-border-strong)]"
               >
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold">
+                  <div className="truncate text-[15px] font-bold tracking-[-0.01em]">
                     {item.name}
                   </div>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs">
-                    <span className="font-bold tabular-nums text-[var(--app-accent)]">
+                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                    <span className="inline-flex items-center rounded-full bg-[var(--app-accent-soft)] px-2.5 py-0.5 text-[12px] font-extrabold tabular-nums text-[var(--app-accent)]">
                       {formatMoney(item.pricePerKg, currency)} / кг
                     </span>
                     {hasKbju && (
-                      <span className="text-[11px] tabular-nums text-[var(--app-hint)]">
-                        {Math.round(item.calories100g)} ккал · Б {item.protein100g} · Ж{" "}
-                        {item.fat100g} · В {item.carbs100g}
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--app-kbju-soft)] px-2.5 py-0.5 text-[11px] font-semibold tabular-nums text-[var(--app-kbju)]">
+                        <Flame className="h-3 w-3" strokeWidth={2.1} />
+                        {Math.round(item.calories100g)} ккал · Б{" "}
+                        {item.protein100g} · Ж {item.fat100g} · В{" "}
+                        {item.carbs100g}
                       </span>
                     )}
                   </div>
@@ -203,7 +236,10 @@ export default function IngredientsPage() {
                     aria-label="Редагувати"
                     onClick={() => openEdit(item)}
                   >
-                    <Pencil className="h-4 w-4 text-[var(--app-hint)]" />
+                    <Pencil
+                      className="h-4 w-4 text-[var(--app-hint)]"
+                      strokeWidth={1.9}
+                    />
                   </Button>
                   <Button
                     type="button"
@@ -212,8 +248,12 @@ export default function IngredientsPage() {
                     aria-label="Видалити"
                     disabled={deletingId === item.id}
                     onClick={() => handleDelete(item)}
+                    className="hover:bg-[var(--app-danger-soft)]"
                   >
-                    <Trash2 className="h-4 w-4 text-[var(--app-danger)]" />
+                    <Trash2
+                      className="h-4 w-4 text-[var(--app-danger)]"
+                      strokeWidth={1.9}
+                    />
                   </Button>
                 </div>
               </Card>

@@ -52,16 +52,18 @@ function CalculatorsContent() {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
-        <h1 className="text-xl font-bold tracking-tight">Калькулятори</h1>
-        <p className="text-xs text-[var(--app-hint)]">
+        <h1 className="text-[22px] sm:text-2xl font-extrabold tracking-[-0.025em]">
+          Калькулятори
+        </h1>
+        <p className="mt-0.5 text-xs font-medium text-[var(--app-hint)]">
           Швидка собівартість, перерахунок форм та харчова цінність
         </p>
       </div>
 
-      {/* Sub-Tabs */}
-      <div className="grid grid-cols-3 gap-1.5 rounded-2xl bg-[var(--app-subtle)] p-1.5 border border-[var(--app-border)]">
+      {/* Tactile Sub-Tabs */}
+      <div className="grid grid-cols-3 gap-1.5 rounded-[18px] bg-[var(--app-subtle)] p-1.5 border border-[var(--app-border)]">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
@@ -73,13 +75,13 @@ function CalculatorsContent() {
                 hapticImpact("light");
                 setActiveTab(tab.id);
               }}
-              className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all cursor-pointer ${
+              className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-[13px] py-2.5 text-[13px] font-bold transition-all active:scale-[0.97] cursor-pointer ${
                 active
-                  ? "bg-[var(--app-card)] text-[var(--app-accent)] shadow-xs"
+                  ? "bg-[var(--app-card)] text-[var(--app-accent)] shadow-[0_2px_8px_rgba(42,30,23,0.08)]"
                   : "text-[var(--app-hint)] hover:text-[var(--app-text)]"
               }`}
             >
-              <Icon className="h-3.5 w-3.5" />
+              <Icon className="h-4 w-4" strokeWidth={active ? 2.2 : 1.85} />
               <span>{tab.label}</span>
             </button>
           );
@@ -105,8 +107,8 @@ export default function CalculatorsPage() {
     <Suspense
       fallback={
         <div className="space-y-4">
-          <div className="h-12 rounded-2xl bg-[var(--app-subtle)] animate-pulse" />
-          <div className="h-64 rounded-2xl bg-[var(--app-subtle)] animate-pulse" />
+          <div className="h-14 rounded-[18px] skeleton-shimmer" />
+          <div className="h-64 rounded-[20px] skeleton-shimmer" />
         </div>
       }
     >

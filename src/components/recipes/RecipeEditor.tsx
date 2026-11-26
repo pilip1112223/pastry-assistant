@@ -7,18 +7,20 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
-  Calculator,
   ChevronDown,
   ChevronUp,
+  Flame,
   Layers,
   Plus,
   Save,
+  Scale,
   Search,
   Trash2,
 } from "lucide-react";
 import type { Ingredient, RecipeWithDetails } from "@/types/pastry";
 import { DIAMETERS } from "@/types/pastry";
 import {
+  calculateKbju,
   calculateRecipe,
   formatMoney,
   formatWeight,
@@ -78,6 +80,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
 
   // Form state
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState("");
   const [baseDiameter, setBaseDiameter] = useState(16);
   const [baseHeight, setBaseHeight] = useState(10);
   const [markupPercent, setMarkupPercent] = useState(100);
@@ -216,6 +219,18 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
     [liveRecipe, selectedDiameter, markupPercent]
   );
 
+  const liveKbju = useMemo(() => {
+    const items = calc.aggregated.map((a) => ({
+      grams: a.totalGrams,
+      calories100g: a.ingredient.calories100g,
+      protein100g: a.ingredient.protein100g,
+      fat100g: a.ingredient.fat100g,
+      carbs100g: a.ingredient.carbs100g,
+    }));
+    if (!items.some((i) => i.calories100g > 0)) return null;
+    return calculateKbju(items, calc.estimatedFinishedWeightGrams, 150);
+  }, [calc]);
+
   const coeff = getDiameterCoefficient(selectedDiameter, baseDiameter || 16);
 
   function addComponent(presetName?: string) {
@@ -303,6 +318,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
 
   async function handleSave() {
     if (!name.trim()) {
+      setNameError("Вкажіть назву торта або десерту");
       showToast("Введіть назву торта", "error");
       setShowMetaSettings(true);
       return;
@@ -314,7 +330,9 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
         name: name.trim(),
         baseDiameter: baseDiameter || 16,
         baseHeight: baseHeight || 10,
-        defaultMarkupPercent: Number.isFinite(markupPercent) ? markupPercent : 100,
+        defaultMarkupPercent: Number.isFinite(markupPercent)
+          ? markupPercent
+          : 100,
         portionsCount: portionsCount || 8,
         finishedWeightGrams: finishedWeightGrams || 0,
         components: components.map((c, idx) => ({
@@ -385,9 +403,23 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-12 rounded-2xl bg-[var(--app-subtle)] animate-pulse" />
-        <div className="h-36 rounded-2xl bg-[var(--app-subtle)] animate-pulse" />
-        <div className="h-52 rounded-2xl bg-[var(--app-subtle)] animate-pulse" />
+        <div className="h-11 w-full rounded-2xl skeleton-shimmer" />
+        <Card className="p-4.5 space-y-3">
+          <div className="h-11 w-full rounded-[14px] skeleton-shimmer" />
+          <div className="h-10 w-full rounded-[12px] skeleton-shimmer" />
+        </Card>
+        <Card className="p-4.5">
+          <div className="grid grid-cols-3 gap-2.5">
+            <div className="h-18 rounded-[14px] skeleton-shimmer" />
+            <div className="h-18 rounded-[14px] skeleton-shimmer" />
+            <div className="h-18 rounded-[14px] skeleton-shimmer" />
+          </div>
+        </Card>
+        <Card className="p-4.5 space-y-3">
+          <div className="h-10 w-48 rounded-xl skeleton-shimmer" />
+          <div className="h-14 w-full rounded-xl skeleton-shimmer" />
+          <div className="h-14 w-full rounded-xl skeleton-shimmer" />
+        </Card>
       </div>
     );
   }
@@ -399,9 +431,9 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
         <button
           type="button"
           onClick={handleBack}
-          className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-sm font-semibold text-[var(--app-hint)] hover:bg-[var(--app-subtle)] hover:text-[var(--app-text)] cursor-pointer"
+          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[13px] px-3 py-2 text-sm font-bold text-[var(--app-hint)] hover:bg-[var(--app-subtle)] hover:text-[var(--app-text)] active:scale-[0.97] transition-all cursor-pointer -ml-2"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
           <span>Торти</span>
         </button>
 
@@ -415,7 +447,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
               onClick={handleDelete}
               aria-label="Видалити рецепт"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" strokeWidth={2} />
             </Button>
           )}
           <Button
@@ -423,25 +455,29 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
             onClick={handleSave}
             disabled={saving}
             size="sm"
-            className="h-10 px-4"
+            className="px-4.5"
           >
-            <Save className="h-4 w-4" />
+            <Save className="h-4 w-4" strokeWidth={2.1} />
             <span>{saving ? "Збереження..." : "Зберегти"}</span>
           </Button>
         </div>
       </div>
 
       {/* Cake Name + Base Settings Card */}
-      <Card className="p-4 space-y-3">
+      <Card className="p-4.5 space-y-3.5">
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--app-hint)] mb-1">
+          <label className="block text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--app-hint)] mb-1.5">
             Назва торта / десерту
           </label>
           <Input
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (nameError) setNameError("");
+            }}
             placeholder="Наприклад: Медовик класичний"
-            className="text-base font-semibold"
+            error={nameError}
+            className="text-[16px] font-bold tracking-[-0.01em]"
           />
         </div>
 
@@ -451,11 +487,11 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
             hapticImpact("light");
             setShowMetaSettings((v) => !v);
           }}
-          className="flex w-full items-center justify-between rounded-xl bg-[var(--app-subtle)] px-3 py-2 text-xs font-semibold text-[var(--app-hint)] cursor-pointer"
+          className="flex w-full min-h-[44px] items-center justify-between gap-2 rounded-[14px] bg-[var(--app-subtle)] px-3.5 py-2.5 text-left text-xs font-semibold text-[var(--app-hint)] hover:bg-[#eee5d8] transition-colors cursor-pointer"
         >
-          <span>
-            Параметри: база Ø {baseDiameter} см · висота {baseHeight} см ·{" "}
-            {portionsCount} порц. · націнка {markupPercent}%
+          <span className="tabular-nums leading-snug">
+            База Ø {baseDiameter} см · висота {baseHeight} см · {portionsCount}{" "}
+            порц. · націнка {markupPercent}%
           </span>
           {showMetaSettings ? (
             <ChevronUp className="h-4 w-4 shrink-0" />
@@ -465,10 +501,10 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
         </button>
 
         {showMetaSettings && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
             <div>
-              <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                Базовий діаметр (см)
+              <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1">
+                Базовий діаметр
               </label>
               <Input
                 type="number"
@@ -481,12 +517,13 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                   setBaseDiameter(val);
                   if (!recipeId) setSelectedDiameter(val);
                 }}
-                className="h-9 text-sm"
+                suffix="см"
+                className="tabular-nums"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                Висота (см)
+              <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1">
+                Висота
               </label>
               <Input
                 type="number"
@@ -495,12 +532,13 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                 max="40"
                 value={baseHeight}
                 onChange={(e) => setBaseHeight(Number(e.target.value) || 10)}
-                className="h-9 text-sm"
+                suffix="см"
+                className="tabular-nums"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                Націнка (%)
+              <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1">
+                Націнка
               </label>
               <Input
                 type="number"
@@ -510,12 +548,13 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                 onChange={(e) =>
                   setMarkupPercent(Math.max(0, Number(e.target.value) || 0))
                 }
-                className="h-9 text-sm"
+                suffix="%"
+                className="tabular-nums"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                Порцій (на базовий Ø)
+              <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1">
+                Порцій (база Ø)
               </label>
               <Input
                 type="number"
@@ -525,12 +564,13 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                 onChange={(e) =>
                   setPortionsCount(Math.max(1, Number(e.target.value) || 8))
                 }
-                className="h-9 text-sm"
+                suffix="шт"
+                className="tabular-nums"
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-[11px] font-medium text-[var(--app-hint)] mb-1">
-                Вага готового торта, г (0 = автосума інгредієнтів)
+              <label className="block text-[11px] font-bold text-[var(--app-hint)] mb-1">
+                Вага готового торта (0 = автосума)
               </label>
               <Input
                 type="number"
@@ -543,7 +583,8 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                   )
                 }
                 placeholder="0 (авто)"
-                className="h-9 text-sm"
+                suffix="г"
+                className="tabular-nums"
               />
             </div>
           </div>
@@ -551,12 +592,12 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
       </Card>
 
       {/* Sticky Quick Diameter Switcher */}
-      <div className="sticky top-[52px] md:top-0 z-20 -mx-3.5 px-3.5 py-2.5 bg-[var(--app-bg)]/95 backdrop-blur-md border-y border-[var(--app-border)] md:mx-0 md:rounded-2xl md:border">
+      <div className="sticky top-[56px] md:top-2 z-20 -mx-4 px-4 py-3 bg-[var(--app-bg)]/92 backdrop-blur-xl border-y border-[var(--app-border)] md:mx-0 md:rounded-[20px] md:border md:bg-[var(--app-card)]/95 md:shadow-[var(--app-shadow-card)]">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-bold">
-            Перерахунок під діаметр (см)
+          <span className="text-xs font-extrabold tracking-[-0.01em]">
+            Перерахунок під діаметр
           </span>
-          <span className="rounded-lg bg-[var(--app-accent-soft)] px-2 py-0.5 text-xs font-bold tabular-nums text-[var(--app-accent)]">
+          <span className="rounded-full bg-[var(--app-accent-soft)] px-2.5 py-0.5 text-xs font-extrabold tabular-nums text-[var(--app-accent)]">
             Ø {selectedDiameter} см · ×{coeff.toFixed(2)}
           </span>
         </div>
@@ -572,17 +613,17 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                   hapticImpact("light");
                   setSelectedDiameter(d);
                 }}
-                className={`relative shrink-0 min-w-[44px] h-10 rounded-xl px-2.5 text-sm font-bold tabular-nums transition-all cursor-pointer ${
+                className={`relative shrink-0 min-w-[46px] h-11 min-h-[44px] rounded-[13px] px-3 text-sm font-bold tabular-nums transition-all active:scale-[0.95] cursor-pointer ${
                   active
-                    ? "bg-[var(--app-accent)] text-[var(--app-accent-text)] shadow-xs"
-                    : "bg-[var(--app-card)] text-[var(--app-text)] border border-[var(--app-border)] hover:border-[var(--app-accent)]/50"
+                    ? "bg-[var(--app-accent)] text-white shadow-[0_3px_10px_rgba(200,90,50,0.28)]"
+                    : "bg-[var(--app-card)] text-[var(--app-text)] border border-[var(--app-border)] hover:border-[var(--app-border-strong)]"
                 }`}
               >
                 {d}
                 {isBase && (
                   <span
-                    className={`absolute -top-1 -right-1 h-2 w-2 rounded-full ${
-                      active ? "bg-[var(--app-card)]" : "bg-[var(--app-accent)]"
+                    className={`absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full ${
+                      active ? "bg-white" : "bg-[var(--app-accent)]"
                     }`}
                     title="Базовий діаметр"
                   />
@@ -593,58 +634,52 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
         </div>
       </div>
 
-      {/* Live Cost & Profit KPI Card */}
-      <Card className="p-4">
+      {/* Live Cost, Profit & Weight KPI Card */}
+      <Card className="p-4.5 space-y-3.5">
         <div className="grid grid-cols-3 gap-2.5">
-          <div className="rounded-xl bg-[var(--app-subtle)] p-3">
-            <div className="text-[11px] font-medium text-[var(--app-hint)]">
+          <div className="rounded-[16px] bg-[var(--app-bg)] border border-[var(--app-border)] p-3">
+            <div className="text-[10.5px] font-bold uppercase tracking-[0.04em] text-[var(--app-hint)]">
               Собівартість
             </div>
-            <div className="mt-1 text-base sm:text-lg font-bold tabular-nums">
+            <div className="mt-1 text-[15px] sm:text-lg font-extrabold tabular-nums">
               {formatMoney(calc.totalCost, currency)}
             </div>
           </div>
 
-          <div className="rounded-xl bg-[var(--app-accent-soft)] p-3">
-            <div className="text-[11px] font-medium text-[var(--app-accent)]">
+          <div className="rounded-[16px] bg-[var(--app-accent-soft)] border border-[var(--app-accent)]/15 p-3">
+            <div className="text-[10.5px] font-bold uppercase tracking-[0.04em] text-[var(--app-accent)]">
               Продаж (+{markupPercent}%)
             </div>
-            <div className="mt-1 text-base sm:text-lg font-bold tabular-nums text-[var(--app-accent)]">
+            <div className="mt-1 text-[15px] sm:text-lg font-extrabold tabular-nums text-[var(--app-accent)]">
               {formatMoney(calc.sellingPrice, currency)}
             </div>
           </div>
 
-          <div className="rounded-xl bg-[var(--app-success-soft)] p-3">
-            <div className="text-[11px] font-medium text-[var(--app-success)]">
+          <div className="rounded-[16px] bg-[var(--app-success-soft)] border border-[var(--app-success)]/15 p-3">
+            <div className="text-[10.5px] font-bold uppercase tracking-[0.04em] text-[var(--app-success)]">
               Прибуток
             </div>
-            <div className="mt-1 text-base sm:text-lg font-bold tabular-nums text-[var(--app-success)]">
+            <div className="mt-1 text-[15px] sm:text-lg font-extrabold tabular-nums text-[var(--app-success)]">
               {formatMoney(calc.netProfit, currency)}
             </div>
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--app-border)] pt-3 text-xs">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <span>
-              <span className="text-[var(--app-hint)]">Вага: </span>
-              <strong className="tabular-nums">
-                {formatWeight(calc.estimatedFinishedWeightGrams)}
-              </strong>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--app-border)] pt-3 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--app-warning-soft)] px-2.5 py-1 font-bold tabular-nums text-[var(--app-warning)]">
+              <Scale className="h-3.5 w-3.5" strokeWidth={2} />
+              {formatWeight(calc.estimatedFinishedWeightGrams)}
             </span>
-            <span>
-              <span className="text-[var(--app-hint)]">За 1 кг: </span>
-              <strong className="tabular-nums">
-                {formatMoney(calc.pricePerKg, currency)}
-              </strong>
+            <span className="inline-flex items-center rounded-full bg-[var(--app-subtle)] px-2.5 py-1 font-semibold tabular-nums text-[var(--app-text)]">
+              <span className="text-[var(--app-hint)] mr-1">За 1 кг:</span>
+              {formatMoney(calc.pricePerKg, currency)}
             </span>
-            <span>
-              <span className="text-[var(--app-hint)]">
-                За 1 порц. ({calc.scaledPortionsCount}):{" "}
+            <span className="inline-flex items-center rounded-full bg-[var(--app-subtle)] px-2.5 py-1 font-semibold tabular-nums text-[var(--app-text)]">
+              <span className="text-[var(--app-hint)] mr-1">
+                1 порц. ({calc.scaledPortionsCount}):
               </span>
-              <strong className="tabular-nums">
-                {formatMoney(calc.pricePerPortion, currency)}
-              </strong>
+              {formatMoney(calc.pricePerPortion, currency)}
             </span>
           </div>
 
@@ -652,20 +687,24 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
             <Link
               href={`/calculators?tab=kbju&recipeId=${recipeId}&diameter=${selectedDiameter}`}
               onClick={() => hapticImpact("light")}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--app-accent)] hover:underline"
+              className="inline-flex items-center gap-1 rounded-full bg-[var(--app-kbju-soft)] px-3 py-1 text-xs font-bold tabular-nums text-[var(--app-kbju)] hover:brightness-95 transition-all"
             >
-              <Calculator className="h-3.5 w-3.5" />
-              <span>КБЖВ</span>
+              <Flame className="h-3.5 w-3.5" strokeWidth={2.1} />
+              <span>
+                {liveKbju && liveKbju.per100g.calories > 0
+                  ? `${liveKbju.per100g.calories} ккал / 100г`
+                  : "КБЖВ"}
+              </span>
             </Link>
           )}
         </div>
       </Card>
 
       {/* Dynamic Components (Layers) */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[var(--app-hint)]">
-            <Layers className="h-4 w-4" />
+      <div className="space-y-3.5">
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <h2 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.06em] text-[var(--app-hint)]">
+            <Layers className="h-4 w-4 text-[var(--app-accent)]" strokeWidth={2} />
             <span>Компоненти торта</span>
           </h2>
           <Button
@@ -674,7 +713,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
             size="sm"
             onClick={() => addComponent()}
           >
-            <Plus className="h-3.5 w-3.5" />
+            <Plus className="h-4 w-4" strokeWidth={2.2} />
             <span>Додати шар</span>
           </Button>
         </div>
@@ -684,22 +723,22 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
           return (
             <Card key={comp.clientKey} className="overflow-hidden">
               {/* Component Header */}
-              <div className="flex items-center gap-2 border-b border-[var(--app-border)] bg-[var(--app-subtle)]/70 px-3.5 py-2.5">
+              <div className="flex items-center gap-2 border-b border-[var(--app-border)] bg-[var(--app-bg)]/80 px-3.5 py-2.5">
                 <Input
                   value={comp.name}
                   onChange={(e) =>
                     updateComponentName(comp.clientKey, e.target.value)
                   }
                   placeholder="Назва компонента (напр. Бісквіт)"
-                  className="h-9 flex-1 font-bold text-sm bg-[var(--app-card)]"
+                  className="flex-1 font-bold text-sm bg-[var(--app-card)]"
                 />
-                <div className="flex items-center gap-0.5 shrink-0">
+                <div className="flex items-center gap-1 shrink-0">
                   <button
                     type="button"
                     disabled={compIndex === 0}
                     onClick={() => moveComponent(compIndex, -1)}
                     aria-label="Вище"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--app-hint)] hover:bg-[var(--app-card)] disabled:opacity-30 cursor-pointer"
+                    className="flex h-11 w-10 min-h-[44px] items-center justify-center rounded-xl text-[var(--app-hint)] hover:bg-[var(--app-card)] disabled:opacity-30 active:scale-95 transition-all cursor-pointer"
                   >
                     <ArrowUp className="h-4 w-4" />
                   </button>
@@ -708,7 +747,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                     disabled={compIndex === components.length - 1}
                     onClick={() => moveComponent(compIndex, 1)}
                     aria-label="Нижче"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--app-hint)] hover:bg-[var(--app-card)] disabled:opacity-30 cursor-pointer"
+                    className="flex h-11 w-10 min-h-[44px] items-center justify-center rounded-xl text-[var(--app-hint)] hover:bg-[var(--app-card)] disabled:opacity-30 active:scale-95 transition-all cursor-pointer"
                   >
                     <ArrowDown className="h-4 w-4" />
                   </button>
@@ -716,7 +755,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                     type="button"
                     onClick={() => removeComponent(comp.clientKey)}
                     aria-label="Видалити шар"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--app-danger)] hover:bg-[var(--app-danger-soft)] cursor-pointer"
+                    className="flex h-11 w-10 min-h-[44px] items-center justify-center rounded-xl text-[var(--app-danger)] hover:bg-[var(--app-danger-soft)] active:scale-95 transition-all cursor-pointer"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -726,8 +765,8 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
               {/* Ingredient Lines */}
               <div className="divide-y divide-[var(--app-border)]">
                 {comp.ingredients.length === 0 ? (
-                  <div className="px-4 py-4 text-center text-xs text-[var(--app-hint)]">
-                    У цьому шарі поки немає інгредієнтів
+                  <div className="px-4 py-6 text-center text-xs font-medium text-[var(--app-hint)]">
+                    У цьому шарі поки немає інгредієнтів — додайте кнопкою нижче
                   </div>
                 ) : (
                   comp.ingredients.map((line) => {
@@ -741,48 +780,45 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                     return (
                       <div
                         key={line.clientKey}
-                        className="flex items-center gap-2.5 px-3.5 py-2.5"
+                        className="flex items-center gap-2.5 px-3.5 py-3"
                       >
                         <div className="min-w-0 flex-1">
-                          <div className="truncate text-sm font-medium">
+                          <div className="truncate text-[14px] font-semibold">
                             {ing.name}
                           </div>
-                          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] tabular-nums text-[var(--app-hint)]">
+                          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11.5px] tabular-nums text-[var(--app-hint)]">
                             <span>
                               {formatMoney(ing.pricePerKg, currency)}/кг
                             </span>
                             {selectedDiameter !== baseDiameter && (
-                              <span className="font-semibold text-[var(--app-accent)]">
+                              <span className="font-bold text-[var(--app-accent)]">
                                 → {roundGrams(scaledG)} г на Ø{selectedDiameter}
                               </span>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <div className="relative w-21">
-                            <Input
-                              type="number"
-                              inputMode="decimal"
-                              min="0"
-                              step="any"
-                              value={line.baseGrams}
-                              onChange={(e) =>
-                                updateLineGrams(
-                                  comp.clientKey,
-                                  line.clientKey,
-                                  e.target.value
-                                )
-                              }
-                              placeholder="0"
-                              className="h-9 pr-6 text-right text-sm font-semibold tabular-nums"
-                            />
-                            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-[var(--app-hint)]">
-                              г
-                            </span>
-                          </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Input
+                            type="number"
+                            inputMode="decimal"
+                            min="0"
+                            step="any"
+                            value={line.baseGrams}
+                            onChange={(e) =>
+                              updateLineGrams(
+                                comp.clientKey,
+                                line.clientKey,
+                                e.target.value
+                              )
+                            }
+                            placeholder="0"
+                            suffix="г"
+                            wrapperClassName="w-24"
+                            className="text-right font-bold tabular-nums"
+                          />
 
-                          <div className="w-18 text-right text-xs font-bold tabular-nums">
+                          <div className="w-18 text-right text-xs font-extrabold tabular-nums text-[var(--app-text)]">
                             {formatMoney(lineCost, currency)}
                           </div>
 
@@ -792,9 +828,9 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                               removeLine(comp.clientKey, line.clientKey)
                             }
                             aria-label="Прибрати інгредієнт"
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--app-hint)] hover:text-[var(--app-danger)] cursor-pointer"
+                            className="flex h-11 w-9 min-h-[44px] items-center justify-center rounded-xl text-[var(--app-hint)] hover:bg-[var(--app-danger-soft)] hover:text-[var(--app-danger)] active:scale-95 transition-all cursor-pointer"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       </div>
@@ -804,29 +840,29 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
               </div>
 
               {/* Component Footer */}
-              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--app-border)] bg-[var(--app-subtle)]/40 px-3.5 py-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--app-border)] bg-[var(--app-bg)]/50 px-3.5 py-2.5">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="text-[var(--app-accent)] hover:bg-[var(--app-accent-soft)] px-2.5"
+                  className="text-[var(--app-accent)] hover:bg-[var(--app-accent-soft)] px-3"
                   onClick={() => {
                     hapticImpact("light");
                     setPickerSearch("");
                     setPickerCompKey(comp.clientKey);
                   }}
                 >
-                  <Plus className="h-4 w-4" />
-                  <span>Інгредієнт</span>
+                  <Plus className="h-4 w-4" strokeWidth={2.3} />
+                  <span>Додати інгредієнт</span>
                 </Button>
 
                 <div className="text-xs tabular-nums text-[var(--app-hint)]">
                   Разом шар:{" "}
-                  <strong className="text-[var(--app-text)]">
+                  <strong className="font-bold text-[var(--app-text)]">
                     {formatWeight(calculatedComp?.totalGrams ?? 0)}
                   </strong>{" "}
                   ·{" "}
-                  <strong className="text-[var(--app-accent)]">
+                  <strong className="font-extrabold text-[var(--app-accent)]">
                     {formatMoney(calculatedComp?.totalCost ?? 0, currency)}
                   </strong>
                 </div>
@@ -836,13 +872,13 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
         })}
 
         {/* Quick Preset Chips for Adding Layers */}
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {COMPONENT_PRESETS.map((preset) => (
             <button
               key={preset}
               type="button"
               onClick={() => addComponent(preset)}
-              className="rounded-xl border border-dashed border-[var(--app-border)] px-3 py-1.5 text-xs font-medium text-[var(--app-hint)] hover:border-[var(--app-accent)] hover:text-[var(--app-accent)] cursor-pointer"
+              className="min-h-[40px] rounded-full border border-dashed border-[var(--app-border-strong)] bg-[var(--app-card)]/70 px-3.5 py-1.5 text-xs font-bold text-[var(--app-hint)] hover:border-[var(--app-accent)] hover:bg-[var(--app-accent-soft)] hover:text-[var(--app-accent)] active:scale-[0.97] transition-all cursor-pointer"
             >
               + {preset}
             </button>
@@ -853,14 +889,16 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
       {/* Consolidated Summary Table (Зведення по торту) */}
       {calc.aggregated.length > 0 && (
         <Card className="overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[var(--app-border)] px-4 py-3">
+          <div className="flex items-center justify-between border-b border-[var(--app-border)] bg-[var(--app-bg)]/60 px-4.5 py-3.5">
             <div>
-              <h3 className="text-sm font-bold">Зведення по торту</h3>
-              <p className="text-[11px] text-[var(--app-hint)]">
+              <h3 className="text-[15px] font-extrabold tracking-[-0.01em]">
+                Зведення по торту
+              </h3>
+              <p className="text-[11.5px] font-medium text-[var(--app-hint)]">
                 Загальна витрата кожного продукту на Ø {selectedDiameter} см
               </p>
             </div>
-            <span className="rounded-lg bg-[var(--app-subtle)] px-2.5 py-1 text-xs font-bold tabular-nums">
+            <span className="rounded-full bg-[var(--app-warning-soft)] px-3 py-1 text-xs font-extrabold tabular-nums text-[var(--app-warning)]">
               {formatWeight(calc.totalRawWeightGrams)}
             </span>
           </div>
@@ -869,14 +907,14 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
             {calc.aggregated.map((item) => (
               <div
                 key={item.ingredientId}
-                className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm"
+                className="flex items-center justify-between gap-3 px-4.5 py-3 text-sm"
               >
-                <span className="truncate font-medium">{item.name}</span>
+                <span className="truncate font-semibold">{item.name}</span>
                 <div className="flex items-center gap-3 shrink-0 tabular-nums">
-                  <span className="font-semibold">
+                  <span className="font-bold text-[var(--app-text)]">
                     {formatWeight(item.totalGrams)}
                   </span>
-                  <span className="w-20 text-right text-xs font-bold text-[var(--app-accent)]">
+                  <span className="w-22 text-right text-xs font-extrabold text-[var(--app-accent)]">
                     {formatMoney(item.totalCost, currency)}
                   </span>
                 </div>
@@ -886,16 +924,19 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
         </Card>
       )}
 
-      {/* Ingredient Picker Modal */}
+      {/* Ingredient Picker Bottom Sheet / Modal */}
       <Modal
         open={pickerCompKey !== null}
         onClose={() => setPickerCompKey(null)}
         title="Обрати інгредієнт"
         subtitle="З вашого складу або створіть новий продукт одразу"
       >
-        <div className="space-y-3">
+        <div className="space-y-3 pb-2">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--app-hint)]" />
+            <Search
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--app-hint)]"
+              strokeWidth={1.9}
+            />
             <Input
               value={pickerSearch}
               onChange={(e) => setPickerSearch(e.target.value)}
@@ -908,13 +949,13 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
           <Button
             type="button"
             variant="secondary"
-            className="w-full justify-center border border-dashed border-[var(--app-accent)]/50 text-[var(--app-accent)]"
+            className="w-full justify-center border border-dashed border-[var(--app-accent)]/50 bg-[var(--app-accent-soft)]/70 text-[var(--app-accent)] hover:bg-[var(--app-accent-soft)]"
             onClick={() => {
               hapticImpact("light");
               setQuickCreateOpen(true);
             }}
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" strokeWidth={2.3} />
             <span>
               {pickerSearch.trim()
                 ? `Створити «${pickerSearch.trim()}» на складі`
@@ -923,16 +964,16 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
           </Button>
 
           {allIngredients.length === 0 ? (
-            <p className="py-4 text-center text-xs text-[var(--app-hint)]">
+            <p className="py-5 text-center text-xs font-medium text-[var(--app-hint)] leading-relaxed">
               На складі поки немає продуктів. Натисніть кнопку вище, щоб додати
               перший продукт прямо зараз.
             </p>
           ) : pickerFiltered.length === 0 ? (
-            <p className="py-4 text-center text-xs text-[var(--app-hint)]">
+            <p className="py-5 text-center text-xs font-medium text-[var(--app-hint)]">
               Продукт не знайдено — ви можете створити його кнопкою вище.
             </p>
           ) : (
-            <div className="max-h-72 overflow-y-auto divide-y divide-[var(--app-border)] rounded-xl border border-[var(--app-border)]">
+            <div className="max-h-72 overflow-y-auto divide-y divide-[var(--app-border)] rounded-[16px] border border-[var(--app-border)]">
               {pickerFiltered.map((ing) => (
                 <button
                   key={ing.id}
@@ -942,12 +983,12 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                       addIngredientToComponent(pickerCompKey, ing);
                     }
                   }}
-                  className="flex w-full items-center justify-between px-3.5 py-3 text-left hover:bg-[var(--app-subtle)] cursor-pointer"
+                  className="flex w-full min-h-[48px] items-center justify-between px-4 py-3 text-left hover:bg-[var(--app-subtle)] active:bg-[var(--app-accent-soft)]/60 transition-colors cursor-pointer"
                 >
-                  <span className="text-sm font-medium truncate pr-2">
+                  <span className="text-sm font-semibold truncate pr-2">
                     {ing.name}
                   </span>
-                  <span className="shrink-0 text-xs font-bold tabular-nums text-[var(--app-accent)]">
+                  <span className="shrink-0 rounded-full bg-[var(--app-accent-soft)] px-2.5 py-0.5 text-xs font-extrabold tabular-nums text-[var(--app-accent)]">
                     {formatMoney(ing.pricePerKg, currency)}/кг
                   </span>
                 </button>
