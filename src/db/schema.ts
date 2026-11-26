@@ -61,7 +61,7 @@ export const ingredients = pgTable(
     unitWeightGrams: doublePrecision("unit_weight_grams").notNull().default(0),
     calories100g: doublePrecision("calories_100g").notNull().default(0),
     protein100g: doublePrecision("protein_100g").notNull().default(0),
-    fat100g: doublePrecision("fat100g").notNull().default(0),
+    fat100g: doublePrecision("fat_100g").notNull().default(0),
     carbs100g: doublePrecision("carbs_100g").notNull().default(0),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
